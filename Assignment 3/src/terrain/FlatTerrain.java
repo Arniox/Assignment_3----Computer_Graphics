@@ -11,8 +11,8 @@ public class FlatTerrain {
 	private GLUT glut;
 	
 	//Terrain detail
-	private int quadDetailX = 0;
-	private int quadDetailZ = 0;
+	private float quadDetailX = 0;
+	private float quadDetailZ = 0;
 	
 	//Constructor
 	public FlatTerrain(GL2 gl, GLUT glut) {
@@ -21,7 +21,7 @@ public class FlatTerrain {
 	}
 	
 	//Draw
-	public void drawTerrain(int terrainWidth, int terrainLength, int terrainDetail) {
+	public void drawTerrain(float terrainWidth, float terrainLength, float terrainDetail) {
 		quadDetailX = terrainWidth/terrainDetail;
 		quadDetailZ = terrainLength/terrainDetail;
 		
@@ -29,11 +29,13 @@ public class FlatTerrain {
 	}
 	
 	//Calculate
-	public void calculate(int terrainWidth, int terrainLength, int terrainDetail) {	
+	public void calculate(float terrainWidth, float terrainLength, float terrainDetail) {	
+		int zCoordinateCount = (int)terrainLength;
+		int xCoordinateCount = (int)terrainWidth;
 		
 		//Set terrain		
-		for(int z=terrainLength;z>-terrainLength;z--) {
-			for(int x=-terrainWidth;x<terrainWidth;x++) {
+		for(int z=zCoordinateCount;z>-zCoordinateCount;z--) {
+			for(int x=-xCoordinateCount;x<xCoordinateCount;x++) {
 				//Draw quad
 				gl.glBegin(GL2.GL_QUADS);
 				gl.glColor4fv(new float[]{0,1,0,1}, 0);

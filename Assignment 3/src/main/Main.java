@@ -111,7 +111,7 @@ public class Main implements GLEventListener, KeyListener{
 		}
 		
 		//Draw all other non transparent objects
-			this.flatTerrain.drawTerrain(1, 1, 10);
+			this.flatTerrain.drawTerrain(4, 4, 10);
 		//Draw transparent objects last
 		gl.glEnable(GL2.GL_BLEND);
 		gl.glDepthMask(false);
