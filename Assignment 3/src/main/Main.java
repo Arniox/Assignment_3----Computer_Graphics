@@ -34,6 +34,10 @@ public class Main implements GLEventListener, KeyListener{
 	private int cameraInUse = 0;
 	//Debugging
 	private boolean debugging = true;
+	private boolean wireFrame = true;
+	
+	//Terrain generation
+	private float terrainHeightRange = 1f;
 	//Animate
 	private boolean animate = true;
 	
@@ -87,6 +91,13 @@ public class Main implements GLEventListener, KeyListener{
 
 	@Override
 	public void display(GLAutoDrawable arg0) {
+		//Drawing mode
+		if(wireFrame) {
+			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
+		}else {
+			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
+		}
+		
 		//Select and clear model-view matrix
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
@@ -107,11 +118,11 @@ public class Main implements GLEventListener, KeyListener{
 		}
 		//Axis drawing
 		if(debugging) {
-			coordinateAxis.debug();
+			coordinateAxis.debug(100);
 		}
 		
 		//Draw all other non transparent objects
-			this.flatTerrain.drawTerrain(4, 4, 10);
+			this.flatTerrain.drawTerrain();
 		//Draw transparent objects last
 		gl.glEnable(GL2.GL_BLEND);
 		gl.glDepthMask(false);
@@ -127,6 +138,12 @@ public class Main implements GLEventListener, KeyListener{
 
 	@Override
 	public void init(GLAutoDrawable drawable) {
+		System.out.println("Press D: Toggle debugging\n"+
+						   "Press W: Toggle wire frame\n"+
+						   "Press Space: Toggle animation\n"+
+						   "Press 1: Debugging Camera\n"+
+						   "");
+		
 		//Set up mains
 		gl = drawable.getGL().getGL2();
 		glut = new GLUT();
@@ -148,12 +165,48 @@ public class Main implements GLEventListener, KeyListener{
 		coordinateAxis = new CoordinateAxes(gl, glut);
 		
 		//Create all objects
-		flatTerrain = new FlatTerrain(this.gl, this.glut);	
+		//Detail must be a non negative
+		flatTerrain = new FlatTerrain(this.gl, this.glut, 1000, 1000, 100, terrainHeightRange);
+		
+		//use the lights
+		this.lights(gl);
 	}
 
 	@Override
 	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
 		debuggingCamera.newWindowSize(width, height);
+	}
+	
+	@Override
+	public void keyPressed(KeyEvent e) {
+		if(e.getKeyCode() == KeyEvent.VK_D) {
+			this.debugging = !this.debugging;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_W) {
+			this.wireFrame = !this.wireFrame;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_SPACE) {
+			this.animate = !this.animate;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_1) {
+			this.cameraInUse = 0;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_2) {
+			this.cameraInUse = 1;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_3) {
+			this.cameraInUse = 2;
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -161,19 +214,36 @@ public class Main implements GLEventListener, KeyListener{
 		// TODO Auto-generated method stub
 	}
 	
-	@Override
-	public void keyPressed(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-	}
+	//Basic lighting
+	private void lights(GL2 gl) {
+		// lighting stuff
+		float ambient[] = { 0, 0, 0, 1 };
+		float diffuse[] = {1f, 1f, 1f, 1 };
+		float specular[] = { 1, 1, 1, 1 };
 
-	@Override
-	public void keyReleased(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-	}
+		float[] ambientLight = { 0.1f, 0.1f, 0.1f,0f };  // weak RED ambient
+		gl.glLightfv(GL2.GL_LIGHT3, GL2.GL_AMBIENT, ambientLight, 0);
 
-	@Override
-	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
+		float position0[] = { 5, 5, 5, 0 };
+		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, position0, 0);
+		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, ambient, 0);
+		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, diffuse, 0);
+		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, specular, 0);
+
+		float position1[] = { -10, -10, -10, 0 };
+		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, position1, 0);
+		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, ambient, 0);
+		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, diffuse, 0);
+		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, specular, 0);
+
+		gl.glEnable(GL2.GL_LIGHTING);
+		gl.glEnable(GL2.GL_LIGHT0);
+		gl.glEnable(GL2.GL_LIGHT1);
+
+		//lets use use standard color functions
+		gl.glEnable(GL2.GL_COLOR_MATERIAL);
+		//normalise the surface normals for lighting calculations
+		gl.glEnable(GL2.GL_NORMALIZE);
 	}
 
 }

@@ -25,11 +25,11 @@ public class CoordinateAxes {
 	 * Draws the axis and debugging lines	 * 
 	 * @author Nikkolas Diehl
 	 */
-	public void debug() {
+	public void debug(float lengthAxis) {
 		gl.glDisable(GL2.GL_LIGHTING);
-		this.drawAxisLines();
+		this.drawAxisLines(lengthAxis);
 		this.drawCenterSphere();
-		this.drawXYZText();
+		this.drawXYZText(lengthAxis);
 	}
 	
 	/**
@@ -37,7 +37,8 @@ public class CoordinateAxes {
 	 * 
 	 * @author Nikkolas Diehl
 	 */
-	private void drawAxisLines() {
+	private void drawAxisLines(float lengthAxis) {
+		
 		//Draw axis lines
 		gl.glLineWidth(2.0f);
 		gl.glBegin(GL2.GL_LINES);
@@ -45,27 +46,27 @@ public class CoordinateAxes {
 		//Line Positive X - Red
 		gl.glColor3d(1, 0, 0);
 		gl.glVertex3d(0, 0, 0);
-		gl.glVertex3d(100, 0, 0);
+		gl.glVertex3d(lengthAxis, 0, 0);
 		//Line Negative X - Red
 		gl.glColor3d(1, 0, 0);
 		gl.glVertex3d(0, 0, 0);
-		gl.glVertex3d(-100, 0, 0);
+		gl.glVertex3d(-lengthAxis, 0, 0);
 		//Line Positive Y - Green
 		gl.glColor3d(0, 1, 0);
 		gl.glVertex3d(0, 0, 0);
-		gl.glVertex3d(0, 100, 0);
+		gl.glVertex3d(0, lengthAxis, 0);
 		//Line Negative Y - Green
 		gl.glColor3d(0, 1, 0);
 		gl.glVertex3d(0, 0, 0);
-		gl.glVertex3d(0, -100, 0);
+		gl.glVertex3d(0, -lengthAxis, 0);
 		//Line Positive Z - Blue
 		gl.glColor3d(0, 0, 1);
 		gl.glVertex3d(0, 0, 0);
-		gl.glVertex3d(0, 0, 100);
+		gl.glVertex3d(0, 0, lengthAxis);
 		//Line Negative Z - Blue
 		gl.glColor3d(0, 0, 1);
 		gl.glVertex3d(0, 0, 0);
-		gl.glVertex3d(0, 0, -100);
+		gl.glVertex3d(0, 0, -lengthAxis);
 
 		gl.glEnd();
 	}
@@ -87,7 +88,7 @@ public class CoordinateAxes {
 	 * 
 	 * @author Nikkolas Diehl
 	 */
-	private void drawXYZText() {
+	private void drawXYZText(float lengthAxis) {
 		//Draw text X - red
 		gl.glColor3f(1.0f, 0.0f, 0.0f);
 		gl.glRasterPos3f(0.5f,0,0);
