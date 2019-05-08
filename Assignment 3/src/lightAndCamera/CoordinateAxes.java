@@ -25,11 +25,14 @@ public class CoordinateAxes {
 	 * Draws the axis and debugging lines	 * 
 	 * @author Nikkolas Diehl
 	 */
-	public void debug(float lengthAxis) {
-		gl.glDisable(GL2.GL_LIGHTING);
+	public void debug(float lengthAxis, int displayList) {
+		gl.glNewList(displayList, GL2.GL_COMPILE);
+		
 		this.drawAxisLines(lengthAxis);
 		this.drawCenterSphere();
 		this.drawXYZText(lengthAxis);
+		
+		gl.glEndList();
 	}
 	
 	/**

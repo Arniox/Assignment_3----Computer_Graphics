@@ -49,9 +49,7 @@ public class FlatTerrain {
 		this.zQuadDetail = zCoordCount/terrainDetail;
 		this.xQuadDetail = xCoordCount/terrainDetail;
 
-		this.calculate(terrainStartDepth);
-		
-		this.getHeightMap();
+		this.calculate(terrainStartDepth);		
 	}
 	
 	//Draw
@@ -63,45 +61,23 @@ public class FlatTerrain {
 		int yCount = 0;
 		
 		//Set terrain for random
-//		for(float z=zCoordCount; z>-zCoordCount; z-=zQuadDetail) {
-//			for(float x=-xCoordCount; x<xCoordCount; x+=xQuadDetail) {
-//				
-//				//Draw Quad
-//				gl.glBegin(GL2.GL_QUADS);
-//				gl.glColor4fv(new float[]{0,1,0,1}, 0);
-//				
-//				gl.glVertex3f((x+xQuadDetail),yList.get(yCount)[0],z);
-//				gl.glVertex3f((x+xQuadDetail),yList.get(yCount)[1],(z-zQuadDetail));
-//				gl.glVertex3f(x,yList.get(yCount)[2],(z-zQuadDetail));
-//				gl.glVertex3f(x,yList.get(yCount)[3],z);
-//				
-//				gl.glEnd();
-//				
-//				yCount++;
-//			}
-//		}
-		
-		//Push and pop
-		gl.glPushMatrix();
-		
-			gl.glTranslated(-(imgWidth/2), 0, -(imgHeight/2));
-			//Set terrain for height map
-			for(int z=0; z<imgHeight-1; z++) {
-				for(int x=0; x<imgWidth-1; x++) {
-					//Draw quad
-					gl.glBegin(GL2.GL_QUADS);
-					
-					gl.glVertex3f((float)x,(float)heightMap[z][x],(float)z);
-					gl.glVertex3f((float)x,(float)heightMap[z+1][x],(float)z+1);
-					gl.glVertex3f((float)x+1,(float)heightMap[z+1][x+1],(float)z+1);
-					gl.glVertex3f((float)x+1,(float)heightMap[z][x+1],(float)z);
-					
-					gl.glEnd();
-				}
+		for(float z=zCoordCount; z>-zCoordCount; z-=zQuadDetail) {
+			for(float x=-xCoordCount; x<xCoordCount; x+=xQuadDetail) {
+				
+				//Draw Quad
+				gl.glBegin(GL2.GL_QUADS);
+				gl.glColor4fv(new float[]{0,0,0,1}, 0);
+				
+				gl.glVertex3f((x+xQuadDetail),yList.get(yCount)[0],z);
+				gl.glVertex3f((x+xQuadDetail),yList.get(yCount)[1],(z-zQuadDetail));
+				gl.glVertex3f(x,yList.get(yCount)[2],(z-zQuadDetail));
+				gl.glVertex3f(x,yList.get(yCount)[3],z);
+				
+				gl.glEnd();
+				
+				yCount++;
 			}
-		
-		gl.glPopMatrix();
-		
+		}
 		
 	}
 	
@@ -150,31 +126,5 @@ public class FlatTerrain {
 		}
 	}
 	
-	private void getHeightMap() {
-		try {
-			BufferedImage img = ImageIO.read(new File("heightMaps/AucklandHeightMap.png"));
-			
-			imgWidth = img.getWidth();
-			imgHeight = img.getHeight();
-			heightMap = new double[imgHeight][imgWidth];
-			
-			for(int y=0; y<imgHeight; y++) {
-				for(int x=0; x<imgWidth; x++) {
-					int rgb = img.getRGB(x, y);
-					int grey = rgb & 255;
-					double test = (float)grey/255f;
-					
-					heightMap[y][x] = grey/5f;
-				}
-			}
-			
-			System.out.println("test");
-			
-		} catch (IOException e) {
-			System.out.println("Could not read file");
-			
-			e.getMessage();
-			e.getStackTrace();
-		}
-	}
+	
 }

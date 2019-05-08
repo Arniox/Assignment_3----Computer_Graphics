@@ -18,20 +18,30 @@ import com.jogamp.opengl.util.FPSAnimator;
 import com.jogamp.opengl.util.gl2.GLUT;
 
 import lightAndCamera.CoordinateAxes;
+import lightAndCamera.Lighting;
 import lightAndCamera.TrackballCamera;
 import terrain.FlatTerrain;
+import terrain.HeightMappingTerrain;
 
 public class Main implements GLEventListener, KeyListener{
 	//Main variables
 	private static GLCanvas canvas;
 	private static GL2 gl;
-	private static GLUT glut;	
+	private static GLUT glut;
+	
+	//Display Lists
+	private int displayList;
 	
 	//Terrain
 	private FlatTerrain flatTerrain;
+	private HeightMappingTerrain heightMappedTerrain;
+	
+	//Lighting
+	private Lighting lighting;
 	
 	//Current camera mode
 	private int cameraInUse = 0;
+	private int terrainTypeToUse = 1;
 	//Debugging
 	private boolean debugging = true;
 	private boolean wireFrame = true;
@@ -70,7 +80,7 @@ public class Main implements GLEventListener, KeyListener{
 		frame.setResizable(true);
 		
 		//Animator
-		final FPSAnimator animator = new FPSAnimator(canvas, 165);
+		final FPSAnimator animator = new FPSAnimator(canvas, 60);
 		
 		//Window Listener
 		frame.addWindowListener(new WindowAdapter() {
@@ -91,19 +101,8 @@ public class Main implements GLEventListener, KeyListener{
 
 	@Override
 	public void display(GLAutoDrawable arg0) {
-		//Drawing mode
-		if(wireFrame) {
-			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
-		}else {
-			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
-		}
-		
-		//Select and clear model-view matrix
-		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
-		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-		gl.glEnable(GL2.GL_DEPTH_TEST);
-		gl.glMatrixMode(GL2.GL_MODELVIEW);
-		gl.glLoadIdentity();
+		//Set up main functions
+		this.setMainFunctions();
 		
 		//Drawing
 		//Camera drawing
@@ -118,11 +117,18 @@ public class Main implements GLEventListener, KeyListener{
 		}
 		//Axis drawing
 		if(debugging) {
-			coordinateAxis.debug(100);
+			coordinateAxis.debug(100, displayList);
 		}
 		
 		//Draw all other non transparent objects
-			this.flatTerrain.drawTerrain();
+		switch(terrainTypeToUse) {
+			case 0:
+				this.flatTerrain.drawTerrain();
+				break;
+			case 1:
+				this.heightMappedTerrain.drawHeightMappedTerrain(displayList+1);
+				break;
+		}
 		//Draw transparent objects last
 		gl.glEnable(GL2.GL_BLEND);
 		gl.glDepthMask(false);
@@ -134,6 +140,16 @@ public class Main implements GLEventListener, KeyListener{
 		if(animate) {
 			
 		}
+		
+		//Call all display lists
+		gl.glCallList(displayList);
+		gl.glCallList(displayList+1);
+		
+		gl.glFlush();
+		
+		//Delete display lists
+		gl.glDeleteLists(displayList, 1);
+		gl.glDeleteLists(displayList+1, 1);
 	}
 
 	@Override
@@ -153,6 +169,12 @@ public class Main implements GLEventListener, KeyListener{
 		
 		//Set up the drawing area and shading mode
 		gl.glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
+		
+		//use the lights
+		lighting = new Lighting(this.gl, this.glut);
+		lighting.useLighting();
 		gl.glShadeModel(GL2.GL_SMOOTH);
 		
 		//Set up cameras
@@ -161,15 +183,31 @@ public class Main implements GLEventListener, KeyListener{
 		debuggingCamera.setFieldOfView(70);
 		debuggingCamera.setLookAt(0, 0, 0);
 		
+		//Display lists 
+		displayList = gl.glGenLists(2);
+		
 		//Create Axis
 		coordinateAxis = new CoordinateAxes(gl, glut);
 		
 		//Create all objects
 		//Detail must be a non negative
-		flatTerrain = new FlatTerrain(this.gl, this.glut, 1000, 1000, 100, terrainHeightRange);
+		flatTerrain = new FlatTerrain(this.gl, this.glut, 1000, 1000, 1000, terrainHeightRange);
+		heightMappedTerrain = new HeightMappingTerrain(this.gl,this.glut);
+	}
+	
+	//Set up main functions
+	public void setMainFunctions() {
+		//Drawing mode
+		if(wireFrame) {
+			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
+		}else {
+			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
+		}
 		
-		//use the lights
-		this.lights(gl);
+		//Select and clear model-view matrix
+		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+		gl.glEnable(GL2.GL_DEPTH_TEST);
+		gl.glLoadIdentity();
 	}
 
 	@Override
@@ -212,38 +250,6 @@ public class Main implements GLEventListener, KeyListener{
 	@Override
 	public void dispose(GLAutoDrawable arg0) {
 		// TODO Auto-generated method stub
-	}
-	
-	//Basic lighting
-	private void lights(GL2 gl) {
-		// lighting stuff
-		float ambient[] = { 0, 0, 0, 1 };
-		float diffuse[] = {1f, 1f, 1f, 1 };
-		float specular[] = { 1, 1, 1, 1 };
-
-		float[] ambientLight = { 0.1f, 0.1f, 0.1f,0f };  // weak RED ambient
-		gl.glLightfv(GL2.GL_LIGHT3, GL2.GL_AMBIENT, ambientLight, 0);
-
-		float position0[] = { 5, 5, 5, 0 };
-		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, position0, 0);
-		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, ambient, 0);
-		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, diffuse, 0);
-		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, specular, 0);
-
-		float position1[] = { -10, -10, -10, 0 };
-		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, position1, 0);
-		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, ambient, 0);
-		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, diffuse, 0);
-		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, specular, 0);
-
-		gl.glEnable(GL2.GL_LIGHTING);
-		gl.glEnable(GL2.GL_LIGHT0);
-		gl.glEnable(GL2.GL_LIGHT1);
-
-		//lets use use standard color functions
-		gl.glEnable(GL2.GL_COLOR_MATERIAL);
-		//normalise the surface normals for lighting calculations
-		gl.glEnable(GL2.GL_NORMALIZE);
 	}
 
 }
