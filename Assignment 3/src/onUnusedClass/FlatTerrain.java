@@ -1,21 +1,14 @@
-package terrain;
+package onUnusedClass;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
-import javax.imageio.ImageIO;
-
 import com.jogamp.opengl.GL2;
-import com.jogamp.opengl.util.gl2.GLUT;
 
 //https://www.redblobgames.com/maps/terrain-from-noise/
 
 public class FlatTerrain {
 	//Main variables
 	private GL2 gl;
-	private GLUT glut;
 	
 	//Terrain detail
 	int terrainDetail;
@@ -33,9 +26,8 @@ public class FlatTerrain {
 	double[][] heightMap = null;
 	
 	//Constructor
-	public FlatTerrain(GL2 gl, GLUT glut, float terrainWidth, float terrainLength, int terrainDetail, float terrainStartDepth) {
+	public FlatTerrain(GL2 gl, float terrainWidth, float terrainLength, int terrainDetail, float terrainStartDepth) {
 		this.gl = gl;
-		this.glut = glut;
 		
 		//If detail is odd, convert
 		if(terrainDetail%2!=0 && terrainDetail!=1) {

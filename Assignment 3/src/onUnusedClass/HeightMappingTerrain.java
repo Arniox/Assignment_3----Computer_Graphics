@@ -1,21 +1,18 @@
-package terrain;
+package onUnusedClass;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
 import com.jogamp.opengl.GL2;
-import com.jogamp.opengl.util.gl2.GLUT;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureIO;
 
 public class HeightMappingTerrain {
 	//Main variables
 	private GL2 gl;
-	private GLUT glut;
 	
 	//Terrain Detail for heightMaping
 	int imgWidth;
@@ -29,10 +26,9 @@ public class HeightMappingTerrain {
 	Texture gravelTexture;
 	
 	//Constructor
-	public HeightMappingTerrain(GL2 gl, GLUT glut) {
+	public HeightMappingTerrain(GL2 gl) {
 		//Main variables
 		this.gl = gl;
-		this.glut = glut;
 		
 		//Set up height map
 		this.getHeightMap();
@@ -64,7 +60,7 @@ public class HeightMappingTerrain {
 					gl.glNormal3fv(this.calculateNormal(x, z+1),0);
 						gl.glVertex3f(x, heightMap[z+1][x], z+1);
 				}
-				gl.glEnd();	
+				gl.glEnd();
 			}
 		
 		gl.glPopMatrix();
@@ -118,19 +114,6 @@ public class HeightMappingTerrain {
 			System.out.println("[DEBUG] Gravel texture loaded correctly. "+imgWidth+" x "+imgHeight);
 		}catch(Exception e) {
 			System.out.println("[DEBUG] ERROR - Gravel texture did NOT load correctly");
-		}
-	}
-	
-	//Get colour at specific height
-	private float[] getColour(int x, int z) {		
-		try {			
-			if(Math.toDegrees(Math.atan(Math.abs(heightMap[z][x]-heightMap[z+1][x]))) > 45) {
-				return new float[]{1,0,0};
-			}else {
-				return new float[]{1,1,1};
-			}
-		}catch(Exception e) {
-			return new float[]{0,0,0};
 		}
 	}
 	

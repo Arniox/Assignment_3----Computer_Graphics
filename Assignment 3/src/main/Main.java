@@ -17,11 +17,11 @@ import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.util.FPSAnimator;
 import com.jogamp.opengl.util.gl2.GLUT;
 
+import character.Player;
 import lightAndCamera.CoordinateAxes;
 import lightAndCamera.Lighting;
 import lightAndCamera.TrackballCamera;
-import terrain.FlatTerrain;
-import terrain.HeightMappingTerrain;
+import terrain.NoiseTerrain;
 
 public class Main implements GLEventListener, KeyListener{
 	//Main variables
@@ -33,21 +33,20 @@ public class Main implements GLEventListener, KeyListener{
 	private int displayList;
 	
 	//Terrain
-	private FlatTerrain flatTerrain;
-	private HeightMappingTerrain heightMappedTerrain;
+	private NoiseTerrain terrain;
+	
+	//Character
+	private Player player;
 	
 	//Lighting
 	private Lighting lighting;
 	
 	//Current camera mode
 	private int cameraInUse = 0;
-	private int terrainTypeToUse = 1;
 	//Debugging
 	private boolean debugging = true;
 	private boolean wireFrame = true;
 	
-	//Terrain generation
-	private float terrainHeightRange = 1f;
 	//Animate
 	private boolean animate = true;
 	
@@ -121,14 +120,9 @@ public class Main implements GLEventListener, KeyListener{
 		}
 		
 		//Draw all other non transparent objects
-		switch(terrainTypeToUse) {
-			case 0:
-				this.flatTerrain.drawTerrain();
-				break;
-			case 1:
-				this.heightMappedTerrain.drawHeightMappedTerrain(displayList+1);
-				break;
-		}
+		this.terrain.drawHeightMappedTerrain(displayList+1);
+		this.player.drawPlayer();
+		this.lighting.drawSpheres();
 		//Draw transparent objects last
 		gl.glEnable(GL2.GL_BLEND);
 		gl.glDepthMask(false);
@@ -138,7 +132,7 @@ public class Main implements GLEventListener, KeyListener{
 		
 		//Animate
 		if(animate) {
-			
+			player.animate();
 		}
 		
 		//Call all display lists
@@ -154,8 +148,8 @@ public class Main implements GLEventListener, KeyListener{
 
 	@Override
 	public void init(GLAutoDrawable drawable) {
-		System.out.println("Press D: Toggle debugging\n"+
-						   "Press W: Toggle wire frame\n"+
+		System.out.println("Press Comma (,): Toggle debugging\n"+
+						   "Press Back Slash (\\): Toggle wire frame\n"+
 						   "Press Space: Toggle animation\n"+
 						   "Press 1: Debugging Camera\n"+
 						   "");
@@ -173,7 +167,7 @@ public class Main implements GLEventListener, KeyListener{
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		
 		//use the lights
-		lighting = new Lighting(this.gl, this.glut);
+		lighting = new Lighting(gl, glut);
 		lighting.useLighting();
 		gl.glShadeModel(GL2.GL_SMOOTH);
 		
@@ -190,9 +184,13 @@ public class Main implements GLEventListener, KeyListener{
 		coordinateAxis = new CoordinateAxes(gl, glut);
 		
 		//Create all objects
-		//Detail must be a non negative
-		flatTerrain = new FlatTerrain(this.gl, this.glut, 1000, 1000, 1000, terrainHeightRange);
-		heightMappedTerrain = new HeightMappingTerrain(this.gl,this.glut);
+		terrain = new NoiseTerrain(gl);
+		
+		//Set character
+		float x = 0;
+		float z = 0;
+		float[] pStart = new float[]{x-1, terrain.getHeightBellow(x-1, z-1), z-1};
+		player = new Player(gl, glut, new float[]{pStart[0], pStart[1], pStart[2]}, this.terrain);
 	}
 	
 	//Set up main functions
@@ -217,10 +215,10 @@ public class Main implements GLEventListener, KeyListener{
 	
 	@Override
 	public void keyPressed(KeyEvent e) {
-		if(e.getKeyCode() == KeyEvent.VK_D) {
+		if(e.getKeyCode() == KeyEvent.VK_COMMA) {
 			this.debugging = !this.debugging;
 		}
-		if(e.getKeyCode() == KeyEvent.VK_W) {
+		if(e.getKeyCode() == KeyEvent.VK_BACK_SLASH) {
 			this.wireFrame = !this.wireFrame;
 		}
 		if(e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -235,11 +233,34 @@ public class Main implements GLEventListener, KeyListener{
 		if(e.getKeyCode() == KeyEvent.VK_3) {
 			this.cameraInUse = 2;
 		}
+		if(e.getKeyCode() == KeyEvent.VK_W) {
+			this.player.movingForward = true;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_S) {
+			this.player.movingBackwards = true;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_A) {
+			this.player.strafeLeft = true;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_D) {
+			this.player.strafeRight = true;
+		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		
+		if(e.getKeyCode() == KeyEvent.VK_W) {
+			this.player.movingForward = false;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_S) {
+			this.player.movingBackwards = false;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_A) {
+			this.player.strafeLeft = false;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_D) {
+			this.player.strafeRight = false;
+		}
 	}
 
 	@Override
