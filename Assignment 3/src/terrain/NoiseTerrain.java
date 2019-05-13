@@ -3,11 +3,13 @@ package terrain;
 import java.io.File;
 import java.io.IOException;
 
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLException;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureIO;
 
+//Textures from - https://www.wildtextures.com/category/options/seamless/
 public class NoiseTerrain {
 	//Main variables
 	private GL2 gl;
@@ -22,8 +24,22 @@ public class NoiseTerrain {
 	private HeightsGenerator generator;
 	
 	//Texturing
-	Texture grassTexture;
-	Texture dirtTexture;
+	public Texture[] textures;
+	private Texture tex;
+	public String[] textureNames;
+	
+	//Material
+	//Grass terrain materials (constant)
+	//Diffuse - Light that hits the surface of an object - 
+	//			//The 'color' that defines a shape. If a shape has material of blood, it would reflect a diffuse of {1,0,0,1} or have
+	//			//a red texture with a diffuse of {1,1,1,1}
+	//Specular - Directional light that reflects off of a surface in a sharp and uniform way
+	//			//The light that bounces off an object. This will almost always be white {1,1,1,1} or no light {0,0,0,0}
+	
+	private static final float GRASS_DIFFUSE[] = {1,1,1,1};
+	private static final float GRASS_SPECULAR[] = {0,0,0,0};
+	private static final float GRASS_AMBIENT[] = {0,0,0,0};
+	private static final float GRASS_SHININESS = 0;
 	
 	//Constructor
 	public NoiseTerrain(GL2 gl) {
@@ -35,9 +51,12 @@ public class NoiseTerrain {
 		this.generator = new HeightsGenerator();
 		this.generateHeights();
 		
-		//Buffer images
-		bufferTextures();
-		
+		//Fill texture array
+		textures = new Texture[4];	
+		textureNames = new String[]{"textures/grass.jpg",
+									"textures/pebbles.jpg",
+									"textures/groundcover.jpg",
+									"textures/snow.jpg"};
 	}
 	
 	//Draw
@@ -46,21 +65,54 @@ public class NoiseTerrain {
 		gl.glPushMatrix();
 		gl.glTranslated(-(SIZE/2), 0, -(SIZE/2));
 		
+		//Load
+		tex = textures[0];
+		//Bind
+		tex.enable(gl);
+		tex.bind(gl);
+		//Set clamping (Set clamping for s and then t)
+		tex.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_REPEAT);
+		tex.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_REPEAT);
+		tex.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
+		tex.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
+		//Set material:
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, GRASS_AMBIENT, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, GRASS_DIFFUSE, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, GRASS_SPECULAR, 0);
+		gl.glMaterialf(GL2.GL_FRONT, GL2.GL_SHININESS, GRASS_SHININESS);
+		
 		//Set terrain for height map
 		for(int z=0; z<SIZE; z++) {
 			gl.glBegin(GL2.GL_TRIANGLE_STRIP);
 			for(int x=0; x<SIZE; x++) {
 				gl.glNormal3fv(this.calculateNormal(x, z),0);
+				gl.glTexCoord2d(x, z);
 					gl.glVertex3f(x, heightMap[z][x], z);
 					
 				gl.glNormal3fv(this.calculateNormal(x, z+1),0);
+				gl.glTexCoord2d(x, z+1);
 					gl.glVertex3f(x, heightMap[z+1][x], z+1);
 			}
 			gl.glEnd();
 		}
-		
+		tex.disable(gl);
 		//Pop
 		gl.glPopMatrix();
+	}
+	
+	//Get texture at point
+	private void setTexture(int x, float y, int z) {
+		if(y>10) {
+			tex.disable(gl);
+			tex = textures[3];
+			tex.enable(gl);
+			tex.bind(gl);
+		}else {
+			tex.disable(gl);
+			tex = textures[0];
+			tex.enable(gl);
+			tex.bind(gl);			
+		}
 	}
 	
 	//Generate heights
@@ -110,30 +162,20 @@ public class NoiseTerrain {
 	}
 	
 	//Buffer textures
-	private void bufferTextures() {
-		//Buffer in grass
+	public boolean bufferTextures(int i) {
+		//Buffer in texture at textureName[i]
 		try {
-			grassTexture = TextureIO.newTexture(new File("textures/Grass.png"), true);
-			grassTexture.isUsingAutoMipmapGeneration();
+			textures[i] = TextureIO.newTexture(new File(textureNames[i]), true);
+			textures[i].isUsingAutoMipmapGeneration();
 			
-			if(grassTexture != null) {
-				System.out.println("[DEBUG] - Grass.png BUFFERED correctly");				
+			if(textures[i] != null) {
+				return true;
 			}
 		} catch (GLException | IOException e) {
-			System.out.println("[DEBUG] - Grass.png FAILED to buffer correctly");
+			return false;
 		}
 		
-		//Buffer in dirt
-		try {
-			dirtTexture = TextureIO.newTexture(new File("textures/Gravel.png"), true);
-			dirtTexture.isUsingAutoMipmapGeneration();
-			
-			if(dirtTexture != null) {
-				System.out.println("[DEBUG] - Gravel.png BUFFERED correctly");				
-			}
-		} catch (GLException | IOException e) {
-			System.out.println("[DEBUG] - Gravel.png FAILED to buffer correctly");
-		}
+		return false;
 	}
 	
 }

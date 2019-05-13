@@ -8,6 +8,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
@@ -17,43 +18,49 @@ import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.util.FPSAnimator;
 import com.jogamp.opengl.util.gl2.GLUT;
 
+import Timing.Timing;
 import character.Player;
 import lightAndCamera.CoordinateAxes;
 import lightAndCamera.Lighting;
 import lightAndCamera.TrackballCamera;
+import shaders.StaticShader;
 import terrain.NoiseTerrain;
 
-public class Main implements GLEventListener, KeyListener{
+public class Main implements GLEventListener{
 	//Main variables
-	private static GLCanvas canvas;
-	private static GL2 gl;
-	private static GLUT glut;
+	public static GLCanvas canvas;
+	public static GL2 gl;
+	public static GLUT glut;
+	public static StaticShader shader;
 	
 	//Display Lists
-	private int displayList;
+	public int displayList;
 	
 	//Terrain
-	private NoiseTerrain terrain;
+	public NoiseTerrain terrain;
 	
 	//Character
-	private Player player;
+	public Player player;
 	
 	//Lighting
-	private Lighting lighting;
+	public Lighting lighting;
 	
 	//Current camera mode
-	private int cameraInUse = 0;
+	public int cameraInUse = 0;
 	//Debugging
-	private boolean debugging = true;
-	private boolean wireFrame = true;
+	public boolean debugging = true;
+	public boolean wireFrame = false;
+	
+	//Timing
+	private int frame = 0;
 	
 	//Animate
-	private boolean animate = true;
+	public boolean animate = true;
 	
 	//Trackball camera for debugging
-	private TrackballCamera debuggingCamera;
+	public TrackballCamera debuggingCamera;
 	//Coordinate axis for debugging
-	private CoordinateAxes coordinateAxis;
+	public CoordinateAxes coordinateAxis;
 	
 	public static void main(String[] args){
 		//Build GUIView which contains everything
@@ -66,8 +73,9 @@ public class Main implements GLEventListener, KeyListener{
 		
 		//Canvas stuff
 		Main gameWindow = new Main();
+		EventHandler eventHandler = new EventHandler(gameWindow);
 		canvas.addGLEventListener(gameWindow);
-		canvas.addKeyListener(gameWindow);
+		canvas.addKeyListener(eventHandler);
 		frame.add(canvas);
 		
 		//Scaling setup
@@ -88,6 +96,8 @@ public class Main implements GLEventListener, KeyListener{
 					public void run() {
 						animator.stop();
 						System.exit(0);
+						
+						shader.cleanUp();
 					}
 				}).start();
 			}
@@ -101,7 +111,9 @@ public class Main implements GLEventListener, KeyListener{
 	@Override
 	public void display(GLAutoDrawable arg0) {
 		//Set up main functions
-		this.setMainFunctions();
+		this.setMainFunctionsDisplay();
+		//Shader
+		shader.useProgram();
 		
 		//Drawing
 		//Camera drawing
@@ -121,14 +133,12 @@ public class Main implements GLEventListener, KeyListener{
 		
 		//Draw all other non transparent objects
 		this.terrain.drawHeightMappedTerrain(displayList+1);
-		this.player.drawPlayer();
+		this.player.drawPlayer(frame);
 		this.lighting.drawSpheres();
 		//Draw transparent objects last
-		gl.glEnable(GL2.GL_BLEND);
 		gl.glDepthMask(false);
 			//Draw
 		gl.glDepthMask(true);
-		gl.glDisable(GL2.GL_BLEND);
 		
 		//Animate
 		if(animate) {
@@ -138,33 +148,27 @@ public class Main implements GLEventListener, KeyListener{
 		//Call all display lists
 		gl.glCallList(displayList);
 		gl.glCallList(displayList+1);
-		
+
+		gl.glDisable(GL2.GL_BLEND);
 		gl.glFlush();
 		
 		//Delete display lists
 		gl.glDeleteLists(displayList, 1);
 		gl.glDeleteLists(displayList+1, 1);
+		
+		shader.stop();
+		
+		//Iterate frame
+		frame++;
 	}
 
 	@Override
-	public void init(GLAutoDrawable drawable) {
-		System.out.println("Press Comma (,): Toggle debugging\n"+
-						   "Press Back Slash (\\): Toggle wire frame\n"+
-						   "Press Space: Toggle animation\n"+
-						   "Press 1: Debugging Camera\n"+
-						   "");
-		
+	public void init(GLAutoDrawable drawable) {	
 		//Set up mains
 		gl = drawable.getGL().getGL2();
 		glut = new GLUT();
-		
-		//enable V-sync
-		gl.setSwapInterval(1);
-		
-		//Set up the drawing area and shading mode
-		gl.glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-		gl.glMatrixMode(GL2.GL_MODELVIEW);
+		shader = new StaticShader(gl);
+		setMainFunctionsInit();
 		
 		//use the lights
 		lighting = new Lighting(gl, glut);
@@ -185,16 +189,23 @@ public class Main implements GLEventListener, KeyListener{
 		
 		//Create all objects
 		terrain = new NoiseTerrain(gl);
+		//Load up textures for terrain
+		System.out.println("Loading...");
+		for(int i=0; i<terrain.textures.length; i++) {
+			if(terrain.bufferTextures(i)) {
+				System.out.println("Loading..."+((((float)i+1)/(float)terrain.textures.length)*100)+"%");
+				System.out.println("[DEBUG] - "+terrain.textureNames[i]+" BUFFERED correctly");
+			}else {
+				System.out.println("[DEBUG] - "+terrain.textureNames[i]+" FAILED to buffer correctly");			
+			}
+		}
 		
 		//Set character
-		float x = 0;
-		float z = 0;
-		float[] pStart = new float[]{x-1, terrain.getHeightBellow(x-1, z-1), z-1};
-		player = new Player(gl, glut, new float[]{pStart[0], pStart[1], pStart[2]}, this.terrain);
+		player = new Player(gl, glut, this.terrain);
 	}
 	
-	//Set up main functions
-	public void setMainFunctions() {
+	//Set up main functions for display
+	public void setMainFunctionsDisplay() {
 		//Drawing mode
 		if(wireFrame) {
 			gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
@@ -204,8 +215,22 @@ public class Main implements GLEventListener, KeyListener{
 		
 		//Select and clear model-view matrix
 		gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+		gl.glEnable(GL2.GL_BLEND);
 		gl.glEnable(GL2.GL_DEPTH_TEST);
 		gl.glLoadIdentity();
+	}
+	
+	//Set up main functions for init
+	public void setMainFunctionsInit() {
+		//enable V-sync
+		gl.setSwapInterval(1);
+		
+		//Set up the drawing area and shading mode
+		gl.glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+		gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+		gl.glMatrixMode(GL2.GL_MODELVIEW);
+		gl.glEnable(GL.GL_CULL_FACE);
+		gl.glCullFace(GL.GL_BACK);
 	}
 
 	@Override
@@ -213,64 +238,11 @@ public class Main implements GLEventListener, KeyListener{
 		debuggingCamera.newWindowSize(width, height);
 	}
 	
-	@Override
-	public void keyPressed(KeyEvent e) {
-		if(e.getKeyCode() == KeyEvent.VK_COMMA) {
-			this.debugging = !this.debugging;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_BACK_SLASH) {
-			this.wireFrame = !this.wireFrame;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_SPACE) {
-			this.animate = !this.animate;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_1) {
-			this.cameraInUse = 0;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_2) {
-			this.cameraInUse = 1;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_3) {
-			this.cameraInUse = 2;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_W) {
-			this.player.movingForward = true;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_S) {
-			this.player.movingBackwards = true;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_A) {
-			this.player.strafeLeft = true;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_D) {
-			this.player.strafeRight = true;
-		}
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e) {
-		if(e.getKeyCode() == KeyEvent.VK_W) {
-			this.player.movingForward = false;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_S) {
-			this.player.movingBackwards = false;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_A) {
-			this.player.strafeLeft = false;
-		}
-		if(e.getKeyCode() == KeyEvent.VK_D) {
-			this.player.strafeRight = false;
-		}
-	}
-
-	@Override
-	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-	}
 
 	@Override
 	public void dispose(GLAutoDrawable arg0) {
 		// TODO Auto-generated method stub
+		
 	}
 
 }

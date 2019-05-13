@@ -12,6 +12,12 @@ public class Lighting {
 	private float[] sunPos;
 	private float[] moonPos;
 	
+	//Enable flashlight
+	private boolean flashLight = false;
+	private float[] flashLightPos = new float[]{0,70,0,0};
+	private float[] flashLightDirection = new float[]{0,-1,0};
+	private float theta = 20;
+	
 	//Consturctor
 	public Lighting(GL2 gl, GLUT glut) {
 		this.gl = gl;
@@ -26,8 +32,8 @@ public class Lighting {
 		
 		//The sun
 		float diffuseSun[] = {1, 1, 1, 1 };
-		float ambientSun[] = { 1, 1, 1, 1 };
 		float specularSun[] = { 1, 1, 1, 1 };
+		float ambientSun[] = { 1, 1, 1, 1 };
 		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, ambientSun, 0);
 		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, diffuseSun, 0);
 		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, specularSun, 0);
@@ -36,23 +42,40 @@ public class Lighting {
 		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, sunPos, 0);
 		
 		//The moon
-		float diffuseMoon[] = {0, 0, 1, 1};
-		float ambientMoon[] = {0, 0, 1, 1};
-		float specularMoon[] = {0, 0, 1, 1};
+		float diffuseMoon[] = {0.25f, 0.25f, 1, 1};
+		float specularMoon[] = {0.25f, 0.25f, 1, 1};
+		float ambientMoon[] = {0.25f, 0.25f, 1, 1};
 		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, ambientMoon, 0);
 		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, diffuseMoon, 0);
 		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, specularMoon, 0);
 		//Position of the moon
-		moonPos = new float[]{0,-100,0,1};
+		moonPos = new float[]{0,100,0,1};
 		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, moonPos, 0);
+		
+		//FlashLight
+		float diffuseFlashLight[] = {1,1,0.2f,1};
+		float specularFlashLight[] = {1,1,0.8f,1};
+		float ambientFlashLight[] = {1,1,1,0.2f};
+		gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_AMBIENT, diffuseFlashLight, 0);
+		gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_DIFFUSE, specularFlashLight, 0);
+		gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_SPECULAR, ambientFlashLight, 0);
+		//Position of flashLight
+		gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_POSITION, flashLightPos, 0);
+		gl.glLightfv(GL2.GL_LIGHT2, GL2.GL_SPOT_DIRECTION, flashLightDirection, 0);
+		//Cutoff angle
+		gl.glLightf(GL2.GL_LIGHT2, GL2.GL_SPOT_CUTOFF, theta);
 		
 		//Enable the lights
 		gl.glEnable(GL2.GL_LIGHTING);
 		gl.glEnable(GL2.GL_LIGHT0);
 		//gl.glEnable(GL2.GL_LIGHT1);
+		
+		//If flash light is turned on
+		if(flashLight) {
+			gl.glEnable(GL2.GL_LIGHT2);			
+		}
 	
 		//lets use use standard color functions
-		//gl.glEnable(GL2.GL_COLOR_MATERIAL);
 		//normalize the surface normals for lighting calculations
 		gl.glEnable(GL2.GL_NORMALIZE);
 	}
@@ -70,6 +93,13 @@ public class Lighting {
 		gl.glTranslated(moonPos[0], moonPos[1], moonPos[2]);
 			glut.glutSolidSphere(3, 10, 10);
 		gl.glPopMatrix();
+	}
+	
+	//Update the the flash light every frame
+	public void updateFlashLightPos(boolean status, float[] pos, float[] direction) {
+		this.flashLight = status;
+		this.flashLightPos = pos;
+		this.flashLightDirection = direction;
 	}
 	
 }

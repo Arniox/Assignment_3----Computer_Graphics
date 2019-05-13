@@ -1,6 +1,7 @@
+/Timing/
+/character/
 /lightAndCamera/
 /main/
 /terrain/
-/Timing/
-/onUnusedClass/
-/character/
+/unusedClass/
+/shaders/
