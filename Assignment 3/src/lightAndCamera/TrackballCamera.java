@@ -31,7 +31,7 @@ public class TrackballCamera implements MouseListener, MouseMotionListener, Mous
 
     // camera parameters
     double fieldOfView = 45;
-    double distanceToOrigin = 5;
+    double distanceToOrigin = 150;
     double windowWidth = 1;
     double windowHeight = 1;
 

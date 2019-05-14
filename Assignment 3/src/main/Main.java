@@ -18,13 +18,14 @@ import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.util.FPSAnimator;
 import com.jogamp.opengl.util.gl2.GLUT;
 
-import Timing.Timing;
 import character.Player;
 import lightAndCamera.CoordinateAxes;
 import lightAndCamera.Lighting;
 import lightAndCamera.TrackballCamera;
 import shaders.StaticShader;
+import skyBox.SkyBox;
 import terrain.NoiseTerrain;
+import textures.TextureLoader;
 
 public class Main implements GLEventListener{
 	//Main variables
@@ -38,6 +39,19 @@ public class Main implements GLEventListener{
 	
 	//Terrain
 	public NoiseTerrain terrain;
+	//Sky box
+	public SkyBox skyBox;
+	
+	//Texturing
+	public TextureLoader textureLoader;
+	public static final String[] TERRAIN_TEXTURES = new String[]{"textures/grass.jpg",
+																 "textures/pebbles.jpg",
+																 "textures/groundcover.jpg",
+																 "textures/snow.jpg",
+																 "textures/All.png"};
+	public static final String[] SKY_BOX_TEXTURES = new String[]{"textures/clouds.png",
+																 "textures/day.png",
+																 "textures/night.png"};
 	
 	//Character
 	public Player player;
@@ -134,6 +148,7 @@ public class Main implements GLEventListener{
 		//Draw all other non transparent objects
 		this.terrain.drawHeightMappedTerrain(displayList+1);
 		this.player.drawPlayer(frame);
+		this.skyBox.drawSkyBox(player.globalPosition);
 		this.lighting.drawSpheres();
 		//Draw transparent objects last
 		gl.glDepthMask(false);
@@ -164,10 +179,12 @@ public class Main implements GLEventListener{
 
 	@Override
 	public void init(GLAutoDrawable drawable) {	
+		System.out.println("Loading...");
 		//Set up mains
 		gl = drawable.getGL().getGL2();
 		glut = new GLUT();
 		shader = new StaticShader(gl);
+		textureLoader = new TextureLoader();
 		setMainFunctionsInit();
 		
 		//use the lights
@@ -189,19 +206,46 @@ public class Main implements GLEventListener{
 		
 		//Create all objects
 		terrain = new NoiseTerrain(gl);
-		//Load up textures for terrain
-		System.out.println("Loading...");
-		for(int i=0; i<terrain.textures.length; i++) {
-			if(terrain.bufferTextures(i)) {
-				System.out.println("Loading..."+((((float)i+1)/(float)terrain.textures.length)*100)+"%");
-				System.out.println("[DEBUG] - "+terrain.textureNames[i]+" BUFFERED correctly");
-			}else {
-				System.out.println("[DEBUG] - "+terrain.textureNames[i]+" FAILED to buffer correctly");			
-			}
-		}
+		skyBox = new SkyBox(gl, glut);
+		//Load up textures
+		loadTextures();
 		
 		//Set character
 		player = new Player(gl, glut, this.terrain);
+	}
+	
+	//Load up textures
+	public void loadTextures() {
+		int k = 1;
+		float totalLength = (float)TERRAIN_TEXTURES.length + SKY_BOX_TEXTURES.length;
+		
+		//Load terrain textures
+		for(int i=0; i<TERRAIN_TEXTURES.length; i++) {
+			terrain.textures[i] = textureLoader.loadTexture(TERRAIN_TEXTURES[i]);
+			System.out.println("[DEBUG] - "+(((float)k/totalLength)*100)+"% loaded...");
+			
+			if(terrain.textures[i] != null) {
+				System.out.println("[DEBUG] - "+TERRAIN_TEXTURES[i]+" BUFFERED correctly - "+terrain.textures[i].getWidth()+" x "+terrain.textures[i].getHeight());
+			}else {
+				System.out.println("[DEBUG] - "+TERRAIN_TEXTURES[i]+" FAILED to buffer correctly");			
+			}
+			
+			k++;
+		}
+		
+		//Load skybox textures
+		for(int i=0; i<SKY_BOX_TEXTURES.length; i++) {
+			skyBox.textures[i] = textureLoader.loadTexture(SKY_BOX_TEXTURES[i]);
+			System.out.println("[DEBUG] - "+(((float)k/totalLength)*100)+"% loaded...");
+			
+			if(skyBox.textures[i] != null) {
+				System.out.println("[DEBUG] - "+SKY_BOX_TEXTURES[i]+" BUFFERED correctly - "+skyBox.textures[i].getWidth()+" x "+skyBox.textures[i].getHeight());
+			}else {
+				System.out.println("[DEBUG] - "+SKY_BOX_TEXTURES[i]+" FAILED to buffer correctly");
+			}
+			
+			k++;
+		}
 	}
 	
 	//Set up main functions for display

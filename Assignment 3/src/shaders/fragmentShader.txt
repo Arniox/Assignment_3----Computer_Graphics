@@ -3,6 +3,7 @@
 //gl_Color values are calculated in the vertex shaders and interpolated for this fragment
 void main(void){
 
+	//Set render
 	gl_FragColor = gl_Color;
 
 }

@@ -60,6 +60,7 @@ public abstract class ShaderProgram {
 	
 	//Bind attributes
 	protected abstract void bindAttributes();
+	
 	protected void bindAttribute(int attribute, String variableName) {
 		gl.glBindAttribLocation(programID, attribute, variableName);
 	}
@@ -76,7 +77,7 @@ public abstract class ShaderProgram {
 			}
 			reader.close();
 		}catch(IOException e) {
-			System.out.println("[Debug] - Could not read shader file!");
+			System.out.println("[DEBUG] - Could not read shader file!");
 			e.printStackTrace();
 			System.exit(-1);
 		}
@@ -89,7 +90,7 @@ public abstract class ShaderProgram {
 		gl.glCompileShader(shaderID);
 		
 		//Return
-		System.out.println("[Debug] - Shader BUFFERED correctly");
+		System.out.println("[DEBUG] - Shader BUFFERED correctly");
 		return shaderID;
 	}
 	

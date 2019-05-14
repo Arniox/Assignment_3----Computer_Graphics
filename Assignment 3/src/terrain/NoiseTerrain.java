@@ -26,7 +26,6 @@ public class NoiseTerrain {
 	//Texturing
 	public Texture[] textures;
 	private Texture tex;
-	public String[] textureNames;
 	
 	//Material
 	//Grass terrain materials (constant)
@@ -52,11 +51,7 @@ public class NoiseTerrain {
 		this.generateHeights();
 		
 		//Fill texture array
-		textures = new Texture[4];	
-		textureNames = new String[]{"textures/grass.jpg",
-									"textures/pebbles.jpg",
-									"textures/groundcover.jpg",
-									"textures/snow.jpg"};
+		textures = new Texture[5];
 	}
 	
 	//Draw
@@ -98,21 +93,6 @@ public class NoiseTerrain {
 		tex.disable(gl);
 		//Pop
 		gl.glPopMatrix();
-	}
-	
-	//Get texture at point
-	private void setTexture(int x, float y, int z) {
-		if(y>10) {
-			tex.disable(gl);
-			tex = textures[3];
-			tex.enable(gl);
-			tex.bind(gl);
-		}else {
-			tex.disable(gl);
-			tex = textures[0];
-			tex.enable(gl);
-			tex.bind(gl);			
-		}
 	}
 	
 	//Generate heights
@@ -159,23 +139,6 @@ public class NoiseTerrain {
 		}catch(Exception e) {
 			return 0;
 		}
-	}
-	
-	//Buffer textures
-	public boolean bufferTextures(int i) {
-		//Buffer in texture at textureName[i]
-		try {
-			textures[i] = TextureIO.newTexture(new File(textureNames[i]), true);
-			textures[i].isUsingAutoMipmapGeneration();
-			
-			if(textures[i] != null) {
-				return true;
-			}
-		} catch (GLException | IOException e) {
-			return false;
-		}
-		
-		return false;
 	}
 	
 }
