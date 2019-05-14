@@ -73,47 +73,4 @@ public class SkyBox {
 		//Pop
 		gl.glPopMatrix();
 	}
-	
-	//Generate vertices
-	private void generateShape() {
-		this.vertices = new int[][]{
-			{-100,-100, 100},{ 100,-100, 100},
-			{ 100, 100, 100},{-100, 100, 100},
-			{-100,-100,-100},{ 100,-100,-100},
-			{ 100, 100,-100},{-100, 100,-100}
-		};
-		this.faces = new int[][] {
-			{3,2,1,0},{4,5,6,7},
-			{0,4,7,3},{2,6,5,1},
-			{0,1,5,4},{7,6,2,3}
-		};
-		this.normals = new int[][] {
-			{ 0, 0,-1}, { 0, 0,-1},
-			{ 1, 0, 0}, {-1, 0, 0},
-			{ 0, 1, 0}, { 0,-1, 0}
-		};
-	}
-	
-	//Calculate normal
-	private float[] calculateNormals(int[] point0, int[] point1, int[] point2) {
-		float[] normal = new float[3];
-		float[] U = new float[3];
-		float[] V = new float[3];
-		
-		//Set U
-		U[0] = point1[0]-point0[0];
-		U[1] = point1[1]-point0[1];
-		U[2] = point1[2]-point0[2];
-		
-		//Set V
-		V[0] = point2[0]-point0[0];
-		V[1] = point2[1]-point0[1];
-		V[2] = point2[2]-point0[2];
-		
-		normal[0] = U[0]*V[0];
-		normal[1] = U[1]*V[1];
-		normal[2] = U[1]*V[1];
-		
-		return normal;
-	}
 }
