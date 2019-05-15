@@ -33,8 +33,6 @@ public abstract class ShaderProgram {
 		//Validate
 		gl.glValidateProgram(programID);
 		
-		bindAttributes();
-		
 	}
 	
 	//Start
@@ -59,7 +57,7 @@ public abstract class ShaderProgram {
 	}
 	
 	//Bind attributes
-	protected abstract void bindAttributes();
+	protected abstract void bindAttributes(int attribte, String variable);
 	
 	protected void bindAttribute(int attribute, String variableName) {
 		gl.glBindAttribLocation(programID, attribute, variableName);

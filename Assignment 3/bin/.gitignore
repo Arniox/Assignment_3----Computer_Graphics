@@ -1,9 +1,9 @@
-/Timing/
 /character/
 /lightAndCamera/
+/loader/
 /main/
+/shaders/
+/skyBox/
 /terrain/
 /unusedClass/
-/shaders/
-/textures/
-/skyBox/
+/consoleDebugging/

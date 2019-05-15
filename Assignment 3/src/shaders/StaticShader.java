@@ -12,8 +12,8 @@ public class StaticShader extends ShaderProgram {
 	}
 
 	@Override
-	protected void bindAttributes() {
-		super.bindAttribute(0, "position");
+	public void bindAttributes(int attribute, String variable) {
+		super.bindAttribute(attribute, variable);
 	}
 	
 }

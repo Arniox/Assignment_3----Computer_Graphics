@@ -3,8 +3,6 @@ package main;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -25,7 +23,6 @@ import lightAndCamera.TrackballCamera;
 import shaders.StaticShader;
 import skyBox.SkyBox;
 import terrain.NoiseTerrain;
-import textures.TextureLoader;
 
 public class Main implements GLEventListener{
 	//Main variables
@@ -41,17 +38,6 @@ public class Main implements GLEventListener{
 	public NoiseTerrain terrain;
 	//Sky box
 	public SkyBox skyBox;
-	
-	//Texturing
-	public TextureLoader textureLoader;
-	public static final String[] TERRAIN_TEXTURES = new String[]{"textures/grass.jpg",
-																 "textures/pebbles.jpg",
-																 "textures/groundcover.jpg",
-																 "textures/snow.jpg",
-																 "textures/All.png"};
-	public static final String[] SKY_BOX_TEXTURES = new String[]{"textures/clouds.png",
-																 "textures/day.png",
-																 "textures/night.png"};
 	
 	//Character
 	public Player player;
@@ -146,7 +132,7 @@ public class Main implements GLEventListener{
 		}
 		
 		//Draw all other non transparent objects
-		this.terrain.drawHeightMappedTerrain(displayList+1);
+		this.terrain.drawHeightMappedTerrain(shader);
 		this.player.drawPlayer(frame);
 		this.skyBox.drawSkyBox(player.globalPosition);
 		this.lighting.drawSpheres();
@@ -162,14 +148,12 @@ public class Main implements GLEventListener{
 		
 		//Call all display lists
 		gl.glCallList(displayList);
-		gl.glCallList(displayList+1);
 
 		gl.glDisable(GL2.GL_BLEND);
 		gl.glFlush();
 		
 		//Delete display lists
 		gl.glDeleteLists(displayList, 1);
-		gl.glDeleteLists(displayList+1, 1);
 		
 		shader.stop();
 		
@@ -184,7 +168,6 @@ public class Main implements GLEventListener{
 		gl = drawable.getGL().getGL2();
 		glut = new GLUT();
 		shader = new StaticShader(gl);
-		textureLoader = new TextureLoader();
 		setMainFunctionsInit();
 		
 		//use the lights
@@ -199,53 +182,17 @@ public class Main implements GLEventListener{
 		debuggingCamera.setLookAt(0, 0, 0);
 		
 		//Display lists 
-		displayList = gl.glGenLists(2);
+		displayList = gl.glGenLists(1);
 		
 		//Create Axis
 		coordinateAxis = new CoordinateAxes(gl, glut);
 		
 		//Create all objects
 		terrain = new NoiseTerrain(gl);
-		skyBox = new SkyBox(gl, glut);
-		//Load up textures
-		loadTextures();
+		skyBox = new SkyBox(gl);
 		
 		//Set character
 		player = new Player(gl, glut, this.terrain);
-	}
-	
-	//Load up textures
-	public void loadTextures() {
-		int k = 1;
-		float totalLength = (float)TERRAIN_TEXTURES.length + SKY_BOX_TEXTURES.length;
-		
-		//Load terrain textures
-		for(int i=0; i<TERRAIN_TEXTURES.length; i++) {
-			terrain.textures[i] = textureLoader.loadTexture(TERRAIN_TEXTURES[i]);
-			System.out.println("[DEBUG] - "+(((float)k/totalLength)*100)+"% loaded...");
-			
-			if(terrain.textures[i] != null) {
-				System.out.println("[DEBUG] - "+TERRAIN_TEXTURES[i]+" BUFFERED correctly - "+terrain.textures[i].getWidth()+" x "+terrain.textures[i].getHeight());
-			}else {
-				System.out.println("[DEBUG] - "+TERRAIN_TEXTURES[i]+" FAILED to buffer correctly");			
-			}
-			
-			k++;
-		}
-		
-		//Load skybox textures
-		for(int i=0; i<SKY_BOX_TEXTURES.length; i++) {
-			skyBox.textures[i] = textureLoader.loadTexture(SKY_BOX_TEXTURES[i]);
-			System.out.println("[DEBUG] - "+(((float)k/totalLength)*100)+"% loaded...");
-			
-			if(skyBox.textures[i] != null) {
-				System.out.println("[DEBUG] - "+SKY_BOX_TEXTURES[i]+" BUFFERED correctly - "+skyBox.textures[i].getWidth()+" x "+skyBox.textures[i].getHeight());
-			}else {
-				System.out.println("[DEBUG] - "+SKY_BOX_TEXTURES[i]+" FAILED to buffer correctly");
-			}
-			
-			k++;
-		}
 	}
 	
 	//Set up main functions for display

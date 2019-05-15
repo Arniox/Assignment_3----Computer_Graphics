@@ -1,54 +1,8 @@
 #version 130
 
 varying vec2 v_texCoord;
-uniform sampler2D s_texture;
+uniform sampler2D rtexture;
 
 void main(void){
-	vec3 normal, v, lightDir;
-	vec4 diffuse, ambient, globalAmbient;
-	float NdotL;
 	
-	//Set textures
-	gl_fragColor = texture2D(s_texture, v_texCoord);
-	
-	//Compute the ambient and globalAmbient terms
-	globalAmbient = gl_LightModel.ambient * gl_FrontMaterial.ambient;
-	ambient = gl_LightSource[0].ambient * gl_FrontMaterial.ambient;
-	
-	//Compute the diffuse term...
-	//1 - Convert vertexPos into eye coords
-	v = vec3(gl_ModelViewMatrix * gl_Vertex);
-	
-	//2 - Convert normal into eye coords
-	normal = normalize(gl_NormalMatrix * gl_Normal);
-	
-	//3 - Assuming point light, get a vector TO the light
-	lightDir = normalize(gl_LightSource[0].position.xyz - v);
-	
-	//4 - Use Lambert equation
-	NdotL = max(dot(normal, lightDir), 0.0);
-	
-	//5 - Multiply by RGBA material coefficients and lightSource intensities
-	diffuse = NdotL * gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
-	
-		//Computer specular lighting using Blinn Phong with half vector
-		float NdotHV;
-		
-		vec3 dirToView = normalize(-v);
-		vec3 H = normalize(dirToView+lightDir);
-		
-		//Computer the specular term if NdotL is > zero, otherwise leave as 0
-		vec4 specular = vec4(0.0,0.0,0.0,1);
-		
-		if(NdotL > 0.0) {
-			NdotHV = max(dot(normal, H), 0.0);
-			
-			specular = gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
-		}
-		
-		//Set the front colour and pass on to fragment shader
-		gl_FrontColor = gl_FrontMaterial.emission + globalAmbient + ambient + diffuse + specular;
-		
-		//Set the position in clippec coords and pass on to fragment shader
-		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
