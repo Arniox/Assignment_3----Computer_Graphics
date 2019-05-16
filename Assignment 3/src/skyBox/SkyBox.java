@@ -5,6 +5,7 @@ import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.util.texture.Texture;
 
 import loader.ObjLoader;
+import loader.RawModel;
 import loader.TextureLoader;
 
 public class SkyBox {
@@ -26,44 +27,55 @@ public class SkyBox {
 	
 	//Model
 	private ObjLoader objLoader;
+	private RawModel skyBoxDay;
+	private RawModel skyBoxNight;
+	private RawModel skyBoxCloud;
 	
 	//Constructor
 	public SkyBox(GL2 gl) {
 		this.gl = gl;
+
+		objLoader = new ObjLoader(this.gl);
 		
+		//Load textures
 		textureLoader = new TextureLoader();
 		textures = new Texture[3];
 		loadTextures();
 		
-		objLoader = new ObjLoader();
-		objLoader.loadModel("objects/SkyBox.obj");
+		//Load objects
+		skyBoxDay = objLoader.loadModel("objects/SkyBox.obj");
+		skyBoxNight = objLoader.loadModel("objects/SkyBoxNight.obj");
+		skyBoxCloud = objLoader.loadModel("objects/SkyBoxCloud.obj");
 	}
 	
 	//Draw
 	public void drawSkyBox(float[] characterPos) {		
-		//Push and pop
+		//Push and pop for draw
 		gl.glPushMatrix();
 		gl.glTranslated(characterPos[0], 50, characterPos[2]);
-				
-		//Draw cube
-		//Load
-		tex1 = textures[0];
-		tex1.bind(gl);
-		tex1.enable(gl);
-		
-		//Set texture parameter
-		this.setTextureParameter();
-		//Set material:
-		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, SKY_DIFFUSE, 0);
-		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, SKY_SPECULAR, 0);
-		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, SKY_AMBIENT, 0);
-		gl.glMaterialf(GL2.GL_FRONT, GL2.GL_SHININESS, SKY_SHININESS);
-
-		
-		
-		//Disabled
-		tex1.disable(gl);
-		
+			//Load
+			tex1 = textures[0];
+			tex1.bind(gl);
+			tex1.enable(gl);
+			
+			//Set texture parameter
+			this.setTextureParameter();
+			//Set material:
+			gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, SKY_DIFFUSE, 0);
+			gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, SKY_SPECULAR, 0);
+			gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, SKY_AMBIENT, 0);
+			gl.glMaterialf(GL2.GL_FRONT, GL2.GL_SHININESS, SKY_SHININESS);
+	
+			//skyBoxDay.drawObject(GL2.GL_QUAD_STRIP);
+//			gl.glBegin(GL2.GL_QUADS);
+//			gl.glVertex3f(-100, 50, 100);
+//			gl.glVertex3f(100, 50, 100);
+//			gl.glVertex3f(100, 50, -100);
+//			gl.glVertex3f(-100, 50, -100);
+//			gl.glEnd();
+			
+			//Disabled
+			tex1.disable(gl);
 		//Pop
 		gl.glPopMatrix();
 	}
