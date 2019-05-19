@@ -10,13 +10,13 @@ public class RawModel {
 	
 	//Settings
 	int smoothingType;
-	float[] vData;
-	float[] vtData;
-	float[] vnData;
+	ArrayList<float[]> vData;
+	ArrayList<float[]> vtData;
+	ArrayList<float[]> vnData;
 	ArrayList<int[][]> faceData;
 	
 	//Constructor
-	public RawModel(GL2 gl, int smoothingType, float[] inVData, float[] inVtData, float[] inVnData, ArrayList<int[][]> inFaceData) {
+	public RawModel(GL2 gl, int smoothingType, ArrayList<float[]> inVData, ArrayList<float[]> inVtData, ArrayList<float[]> inVnData, ArrayList<int[][]> inFaceData) {
 		//Set main
 		this.gl = gl;
 		//Create new RawModel object
@@ -25,6 +25,9 @@ public class RawModel {
 		this.vtData = inVtData;
 		this.vnData = inVnData;
 		this.faceData = inFaceData;
+		
+		//List all data:
+		listAll();
 	}
 	
 	//Draw
@@ -41,8 +44,9 @@ public class RawModel {
 			gl.glBegin(objectType);
 			for(int[] point : surface) {
 				//Set normal, vertex and textureCoord. -1 from index because obj files start from 1 instead of 0
-				gl.glNormal3f(vnData[point[0]-1], vnData[point[1]-1], vnData[point[2]-1]);
-				gl.glVertex3f(vData[point[0]-1]*100, vData[point[1]-1]*100, vData[point[2]-1]*100);
+				gl.glNormal3f(vnData.get(point[2]-1)[0], vnData.get(point[2]-1)[1], vnData.get(point[2]-1)[2]);
+				gl.glTexCoord2f(vtData.get(point[1]-1)[0], vtData.get(point[1]-1)[1]);
+				gl.glVertex3f(vData.get(point[0]-1)[0]*100, vData.get(point[0]-1)[1]*100, vData.get(point[0]-1)[2]*100);
 			}
 			gl.glEnd();
 		}
@@ -51,11 +55,11 @@ public class RawModel {
 	
 	//List all dat
 	public void listAll() {
-		System.out.println("Smoothing type: "+smoothingType);
-		System.out.println("V Data Count: "+vData.length);
-		System.out.println("Vt Data Count: "+vtData.length);
-		System.out.println("Vn Data Count: "+vnData.length);
-		System.out.println("Face Data Count: "+faceData.size());
+		System.out.println("        - Smoothing type: "+smoothingType);
+		System.out.println("        - Vertexes: "+vData.size());
+		System.out.println("        - Texture translations: "+vtData.size());
+		System.out.println("        - Normals: "+vnData.size());
+		System.out.println("        - Faces: "+faceData.size());
 	}
 	
 }

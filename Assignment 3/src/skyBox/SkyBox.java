@@ -54,6 +54,7 @@ public class SkyBox {
 		gl.glPushMatrix();
 		gl.glTranslated(characterPos[0], 50, characterPos[2]);
 			//Load
+			gl.glActiveTexture(GL2.GL_TEXTURE0);
 			tex1 = textures[0];
 			tex1.bind(gl);
 			tex1.enable(gl);
@@ -66,13 +67,7 @@ public class SkyBox {
 			gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, SKY_AMBIENT, 0);
 			gl.glMaterialf(GL2.GL_FRONT, GL2.GL_SHININESS, SKY_SHININESS);
 	
-			//skyBoxDay.drawObject(GL2.GL_QUAD_STRIP);
-//			gl.glBegin(GL2.GL_QUADS);
-//			gl.glVertex3f(-100, 50, 100);
-//			gl.glVertex3f(100, 50, 100);
-//			gl.glVertex3f(100, 50, -100);
-//			gl.glVertex3f(-100, 50, -100);
-//			gl.glEnd();
+			skyBoxDay.drawObject(GL2.GL_QUADS);
 			
 			//Disabled
 			tex1.disable(gl);

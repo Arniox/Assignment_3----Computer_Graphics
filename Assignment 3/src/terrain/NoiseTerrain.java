@@ -38,7 +38,6 @@ public class NoiseTerrain {
 	//			//a red texture with a diffuse of {1,1,1,1}
 	//Specular - Directional light that reflects off of a surface in a sharp and uniform way
 	//			//The light that bounces off an object. This will almost always be white {1,1,1,1} or no light {0,0,0,0}
-	
 	private static final float GRASS_DIFFUSE[] = {1,1,1,1};
 	private static final float GRASS_SPECULAR[] = {0,0,0,0};
 	private static final float GRASS_AMBIENT[] = {0,0,0,0};
@@ -50,7 +49,7 @@ public class NoiseTerrain {
 		this.gl = gl;
 		
 		//Heights
-		this.heightMap = new float[SIZE+1][SIZE+1];
+		this.heightMap = new float[SIZE+3][SIZE+3];
 		this.generator = new HeightsGenerator();
 		this.generateHeights();
 		
@@ -143,8 +142,8 @@ public class NoiseTerrain {
 	
 	//Generate heights
 	private void generateHeights() {
-		for(int z=0; z<SIZE+1; z++) {
-			for(int x=0; x<SIZE+1; x++) {
+		for(int z=0; z<SIZE+3; z++) {
+			for(int x=0; x<SIZE+3; x++) {
 				heightMap[z][x] = generator.generateHeight(x, z);
 			}
 		}
@@ -167,6 +166,11 @@ public class NoiseTerrain {
 		//deduce normal
 		float[] normal = new float[]{((hL2-hL)-(hR2-hR)),2f,((hD2-hD)-(hU2-hU))};
 		return normal;
+	}
+	
+	//Get terrain size
+	public int getSize() {
+		return this.SIZE;
 	}
 	
 	//Get height

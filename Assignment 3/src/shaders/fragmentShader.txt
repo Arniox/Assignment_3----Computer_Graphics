@@ -6,7 +6,4 @@ void main(void){
 	//Set textures
 	gl_FragColor = texture2D(rtexture, v_texCoord);
 
-	//Set render
-	//gl_FragColor = gl_Color;
-
 }

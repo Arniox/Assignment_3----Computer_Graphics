@@ -23,6 +23,7 @@ import lightAndCamera.TrackballCamera;
 import shaders.StaticShader;
 import skyBox.SkyBox;
 import terrain.NoiseTerrain;
+import terrain.WaterLevel;
 
 public class Main implements GLEventListener{
 	//Main variables
@@ -36,6 +37,7 @@ public class Main implements GLEventListener{
 	
 	//Terrain
 	public NoiseTerrain terrain;
+	public WaterLevel waterLevel;
 	//Sky box
 	public SkyBox skyBox;
 	
@@ -133,6 +135,7 @@ public class Main implements GLEventListener{
 		
 		//Draw all other non transparent objects
 		this.terrain.drawHeightMappedTerrain(shader);
+		this.waterLevel.drawWater();
 		this.player.drawPlayer(frame);
 		this.skyBox.drawSkyBox(player.globalPosition);
 		this.lighting.drawSpheres();
@@ -189,6 +192,7 @@ public class Main implements GLEventListener{
 		
 		//Create all objects
 		terrain = new NoiseTerrain(gl);
+		waterLevel = new WaterLevel(gl, terrain.getSize(), -10);
 		skyBox = new SkyBox(gl);
 		
 		//Set character

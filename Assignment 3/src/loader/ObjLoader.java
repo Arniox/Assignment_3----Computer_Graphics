@@ -20,11 +20,6 @@ public class ObjLoader {
 	private ArrayList<float[]> vtData = new ArrayList<float[]>();
 	private ArrayList<float[]> vnData = new ArrayList<float[]>();
 	private ArrayList<int[][]> faceData = new ArrayList<int[][]>();
-	//Array data
-	private float[] vertexes;
-	private float[] textureCoords;
-	private float[] normals;
-	private int[] faces;
 	
 	//Constructor
 	public ObjLoader(GL2 gl) {
@@ -34,6 +29,12 @@ public class ObjLoader {
 	//Load object
 	public RawModel loadModel(String fileName) {
 		System.out.println("\n[DEBUG] - Buffering Object: "+fileName+"...");
+		//Clean up
+		vData = new ArrayList<float[]>();
+		vtData = new ArrayList<float[]>();
+		vnData = new ArrayList<float[]>();
+		faceData = new ArrayList<int[][]>();
+		
 		
 		//Buffer and store object data
 		try {
@@ -43,8 +44,10 @@ public class ObjLoader {
 			
 			while((line = br.readLine()) != null) {
 				if(line.startsWith("#")) {
-					System.out.print("[DEBUG] - "+line+" | ");
-					linesScanned++;
+					if(line.startsWith("# Blender")) {
+						System.out.print("[DEBUG] - "+line+" | ");	
+						linesScanned++;					
+					}
 				}else if(line.startsWith(" ")) {//Ignore whitespace
 				}else if(line.startsWith("o ")) { //Read model name
 					modelName = line.substring(2);
@@ -67,56 +70,16 @@ public class ObjLoader {
 			}
 			
 			System.out.println("\n[DEBUG] - Finished Scanning Object: "+modelName+". Lines: "+linesScanned+". Data: "+(vData.size()+vtData.size()+vnData.size()+faceData.size()));
-			processAndSet();
 			
 			br.close();
 			
-			return new RawModel(gl, smoothingType, vertexes, textureCoords, normals, faceData);
+			return new RawModel(gl, smoothingType, vData, vtData, vnData, faceData);
 			
  		}catch(IOException e) {
 			System.out.println("[DEBUG] - FAILED to buffer: "+fileName);
 			
 			return null;
 		}
-	}
-	
-	//Process all data into arrays
-	private void processAndSet() {
-		vertexes = new float[vData.size()*3];
-		textureCoords = new float[vtData.size()*2];
-		normals = new float[vnData.size()*3];
-		faces = new int[faceData.size()*faceData.get(0).length*faceData.get(0)[0].length];
-		
-		//Process vertexes and clean ArrayList
-		int v = 0;
-		for(float[] h : vData) {
-			vertexes[v] = h[0];
-			vertexes[v+1] = h[1];
-			vertexes[v+2] = h[2];
-			v+=3;
-		}
-		vData = new ArrayList<float[]>();
-		
-		//Process textureCoords and clean ArrayList
-		int vt = 0;
-		for(float[] h : vtData) {
-			textureCoords[vt] = h[0];
-			textureCoords[vt+1] = h[1];
-			vt+=2;
-		}
-		vtData = new ArrayList<float[]>();
-		
-		//Process normals and clean ArrayList
-		int vn = 0;
-		for(float[] h : vnData) {
-			normals[vn] = h[0];
-			normals[vn+1] = h[1];
-			normals[vn+2] = h[2];
-			vn+=3;
-		}
-		vnData = new ArrayList<float[]>();
-		faceData = new ArrayList<int[][]>();
-		
 	}
 	
 	//Process data into string array and return float parsed data
