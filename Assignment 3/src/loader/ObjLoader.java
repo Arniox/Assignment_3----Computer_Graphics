@@ -62,7 +62,11 @@ public class ObjLoader {
 					vnData.add(processData(line));
 					linesScanned++;
 				}else if(line.startsWith("s ")) { //Read smoothing type
-					smoothingType = Integer.parseInt(line.substring(2));
+					if(line.startsWith("s 1")) {
+						smoothingType = Integer.parseInt(line.substring(2));						
+					}else {
+						smoothingType = 0;
+					}
 				}else if(line.startsWith("f ")) { //Read face data
 					faceData.add(processFData(line));
 					linesScanned++;

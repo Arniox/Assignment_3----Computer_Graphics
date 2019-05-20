@@ -31,7 +31,7 @@ public class RawModel {
 	}
 	
 	//Draw
-	public void drawObject(int objectType) {
+	public void drawObject(int objectType, float sizeMultiplier) {
 		//Set shading model
 		if(smoothingType == 1) {
 			gl.glShadeModel(GL2.GL_SMOOTH);
@@ -46,7 +46,7 @@ public class RawModel {
 				//Set normal, vertex and textureCoord. -1 from index because obj files start from 1 instead of 0
 				gl.glNormal3f(vnData.get(point[2]-1)[0], vnData.get(point[2]-1)[1], vnData.get(point[2]-1)[2]);
 				gl.glTexCoord2f(vtData.get(point[1]-1)[0], vtData.get(point[1]-1)[1]);
-				gl.glVertex3f(vData.get(point[0]-1)[0]*100, vData.get(point[0]-1)[1]*100, vData.get(point[0]-1)[2]*100);
+				gl.glVertex3f(vData.get(point[0]-1)[0]*sizeMultiplier, vData.get(point[0]-1)[1]*sizeMultiplier, vData.get(point[0]-1)[2]*sizeMultiplier);
 			}
 			gl.glEnd();
 		}

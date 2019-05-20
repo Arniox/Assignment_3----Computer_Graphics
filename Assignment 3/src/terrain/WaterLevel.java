@@ -19,9 +19,9 @@ public class WaterLevel {
 	private Texture texture;
 	
 	//Material
-	private static final float WATER_DIFFUSE[] = {1,1,1,0.3f};
-	private static final float WATER_SPECULAR[] = {0,0,0,0.3f};
-	private static final float WATER_AMBIENT[] = {0.5f,0.5f,0.5f,0.3f};
+	private static final float WATER_DIFFUSE[] = {1,1,1,0.65f};
+	private static final float WATER_SPECULAR[] = {0,0,0,0.65f};
+	private static final float WATER_AMBIENT[] = {0,0,1,0.65f};
 	private static final float WATER_SHININESS = 80;
 	
 	//Constructor
@@ -82,12 +82,12 @@ public class WaterLevel {
 		System.out.println("\n[DEBUG] - Loading Water Textures...");
 		
 		//Load terrain textures
-			texture = textureLoader.loadTexture("textures/water1.jpg");
+			texture = textureLoader.loadTexture("textures/water/water.jpg");
 			
 			if(texture != null) {
-				System.out.println("[DEBUG] - textures/water.jpg BUFFERED correctly - "+texture.getWidth()+" x "+texture.getHeight());
+				System.out.println("[DEBUG] - textures/water/water.jpg BUFFERED correctly - "+texture.getWidth()+" x "+texture.getHeight());
 			}else {
-				System.out.println("[DEBUG] - textures/water.jpg FAILED to buffer correctly");
+				System.out.println("[DEBUG] - textures/water/water.jpg FAILED to buffer correctly");
 			}
 	}
 	

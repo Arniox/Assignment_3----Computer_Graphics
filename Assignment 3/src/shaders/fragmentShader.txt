@@ -1,9 +1,18 @@
 #version 130
 
 //gl_Color values are calculated in the vertex shaders and interpolated for this fragment
-void main(void){
+sampler2D texture;
+varying vec2 vTexCoord;
 
-	//Set textures
-	gl_FragColor = texture2D(rtexture, v_texCoord);
+void main(void){
+	
+	vec4 color = texture2D(texture, v_texCoord);
+	
+	if(color.a <= 0.1){
+		discard;
+	}
+	
+	gl_FragColor = color;
+	
 
 }

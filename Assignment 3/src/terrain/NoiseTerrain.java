@@ -23,13 +23,7 @@ public class NoiseTerrain {
 	
 	//Texturing
 	private TextureLoader textureLoader;
-	private Texture[] textures;
-	private Texture tex1;
-	private Texture tex2;
-	public static final String[] TERRAIN_TEXTURES = new String[]{"textures/grass.jpg",
-																 "textures/pebbles.jpg",
-																 "textures/groundcover.jpg",
-																 "textures/snow.jpg"};
+	private Texture texture;
 	
 	//Material
 	//Grass terrain materials (constant)
@@ -55,7 +49,6 @@ public class NoiseTerrain {
 		
 		//Fill texture array
 		textureLoader = new TextureLoader();
-		textures = new Texture[4];
 		loadTextures();
 	}
 	
@@ -66,14 +59,8 @@ public class NoiseTerrain {
 		gl.glTranslated(-(SIZE/2), 0, -(SIZE/2));
 		
 		//Load
-		tex1 = textures[0];
-		tex2 = textures[3];
-		gl.glActiveTexture(GL2.GL_TEXTURE0);
-		tex1.bind(gl);
-		tex1.enable(gl);
-		gl.glActiveTexture(GL2.GL_TEXTURE1);
-		tex2.bind(gl);
-		tex2.enable(gl);
+		texture.bind(gl);
+		texture.enable(gl);
 		
 		//Set texture parameter
 		this.setTextureParameter();
@@ -87,22 +74,19 @@ public class NoiseTerrain {
 		for(int z=0; z<SIZE; z++) {
 			gl.glBegin(GL2.GL_TRIANGLE_STRIP);
 			for(int x=0; x<SIZE; x++) {
-				gl.glNormal3fv(this.calculateNormal(x, z),0);			
-				gl.glMultiTexCoord2d(GL2.GL_TEXTURE0, x, z);
+				gl.glNormal3fv(this.calculateNormal(x, z),0);
+				gl.glTexCoord2f((float)x/4f, z);
 					gl.glVertex3f(x, heightMap[z][x], z);
 					
-				gl.glNormal3fv(this.calculateNormal(x, z+1),0);			
-				gl.glMultiTexCoord2d(GL2.GL_TEXTURE0, x, z+1);
+				gl.glNormal3fv(this.calculateNormal(x, z+1),0);	
+				gl.glTexCoord2f((float)x/4f, z+1);
 					gl.glVertex3f(x, heightMap[z+1][x], z+1);
 			}
 			gl.glEnd();
 		}
 
 		//Disable
-		gl.glActiveTexture(GL2.GL_TEXTURE0);
-		tex1.disable(gl);
-		gl.glActiveTexture(GL2.GL_TEXTURE1);
-		tex2.disable(gl);
+		texture.disable(gl);
 		
 		//Pop
 		gl.glPopMatrix();
@@ -113,31 +97,22 @@ public class NoiseTerrain {
 		System.out.println("\n[DEBUG] - Loading Terrain Textures...");
 		
 		//Load terrain textures
-		for(int i=0; i<TERRAIN_TEXTURES.length; i++) {
-			textures[i] = textureLoader.loadTexture(TERRAIN_TEXTURES[i]);
-			System.out.println("[DEBUG] - "+(i+1)+"/"+TERRAIN_TEXTURES.length+" loaded...");
-			
-			if(textures[i] != null) {
-				System.out.println("[DEBUG] - "+TERRAIN_TEXTURES[i]+" BUFFERED correctly - "+textures[i].getWidth()+" x "+textures[i].getHeight());
-			}else {
-				System.out.println("[DEBUG] - "+TERRAIN_TEXTURES[i]+" FAILED to buffer correctly");
-			}
+		texture = textureLoader.loadTexture("textures/terrain/All.png");
+		
+		if(texture != null) {
+			System.out.println("[DEBUG] - textures/terrain/All.png BUFFERED correctly - "+texture.getWidth()+" x "+texture.getHeight());
+		}else {
+			System.out.println("[DEBUG] - textures/terrain/All.png FAILED to buffer correctly");
 		}
 	}
 	
 	//Set texture parameter
 	private void setTextureParameter() {
 		//Set tex1
-		tex1.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_REPEAT);
-		tex1.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_REPEAT);
-		tex1.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
-		tex1.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
-		
-		//Set tex2
-		tex2.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_REPEAT);
-		tex2.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_REPEAT);
-		tex2.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
-		tex2.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
+		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_REPEAT);
+		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_REPEAT);
+		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
+		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
 	}
 	
 	//Generate heights

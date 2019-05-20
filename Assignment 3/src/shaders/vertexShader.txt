@@ -1,8 +1,7 @@
 #version 130
 
-in vec2 v_texCoord;
-in sampler2D rtexture;
+varying vec2 vTexCoord;
 
 void main(void){
-	
+
 }

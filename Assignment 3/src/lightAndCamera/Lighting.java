@@ -24,7 +24,22 @@ public class Lighting {
 		this.glut = glut;
 	}	
 	
-	public void useLighting() {
+	//Run on display
+	public void runOnDisplay(boolean night) {
+		if(night) {
+			//Draw moon
+			gl.glEnable(GL2.GL_LIGHT1);
+			gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, moonPos, 0);
+		}else {
+			//Draw sun
+			gl.glEnable(GL2.GL_LIGHT0);
+			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, sunPos, 0);
+			
+		}
+	}
+	
+	//Initiate lighting parameters
+	public void initLighting() {
 		//Lighting stuff
 		//Global ambient light
 		float globalAmp[] = {0.4f, 0, 0, 1};
@@ -37,9 +52,8 @@ public class Lighting {
 		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, ambientSun, 0);
 		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, diffuseSun, 0);
 		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, specularSun, 0);
-		//Position of the sun
+		//Starter position of the sun
 		sunPos = new float[]{0,100,0,1};
-		gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, sunPos, 0);
 		
 		//The moon
 		float diffuseMoon[] = {0.25f, 0.25f, 1, 1};
@@ -48,9 +62,8 @@ public class Lighting {
 		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, ambientMoon, 0);
 		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, diffuseMoon, 0);
 		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, specularMoon, 0);
-		//Position of the moon
+		//Starter position of the moon
 		moonPos = new float[]{0,100,0,1};
-		gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, moonPos, 0);
 		
 		//FlashLight
 		float diffuseFlashLight[] = {1,1,0.2f,1};
@@ -67,15 +80,11 @@ public class Lighting {
 		
 		//Enable the lights
 		gl.glEnable(GL2.GL_LIGHTING);
-		gl.glEnable(GL2.GL_LIGHT0);
-		//gl.glEnable(GL2.GL_LIGHT1);
 		
 		//If flash light is turned on
 		if(flashLight) {
 			gl.glEnable(GL2.GL_LIGHT2);			
 		}
-	
-		//lets use use standard color functions
 		//normalize the surface normals for lighting calculations
 		gl.glEnable(GL2.GL_NORMALIZE);
 	}

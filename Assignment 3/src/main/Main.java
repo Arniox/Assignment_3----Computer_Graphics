@@ -18,6 +18,7 @@ import com.jogamp.opengl.util.gl2.GLUT;
 
 import character.Player;
 import lightAndCamera.CoordinateAxes;
+import lightAndCamera.FirstPersonCamera;
 import lightAndCamera.Lighting;
 import lightAndCamera.TrackballCamera;
 import shaders.StaticShader;
@@ -28,6 +29,7 @@ import terrain.WaterLevel;
 public class Main implements GLEventListener{
 	//Main variables
 	public static GLCanvas canvas;
+	public static Debugging debuggingControls;
 	public static GL2 gl;
 	public static GLUT glut;
 	public static StaticShader shader;
@@ -48,7 +50,7 @@ public class Main implements GLEventListener{
 	public Lighting lighting;
 	
 	//Current camera mode
-	public int cameraInUse = 0;
+	public int cameraInUse = 1;
 	//Debugging
 	public boolean debugging = true;
 	public boolean wireFrame = false;
@@ -58,9 +60,11 @@ public class Main implements GLEventListener{
 	
 	//Animate
 	public boolean animate = true;
+	public float frameDimension[] = new float[2];
 	
-	//Trackball camera for debugging
+	//Cameras
 	public TrackballCamera debuggingCamera;
+	public FirstPersonCamera povCamera;
 	//Coordinate axis for debugging
 	public CoordinateAxes coordinateAxis;
 	
@@ -75,9 +79,8 @@ public class Main implements GLEventListener{
 		
 		//Canvas stuff
 		Main gameWindow = new Main();
-		EventHandler eventHandler = new EventHandler(gameWindow);
+		debuggingControls = new Debugging(canvas, gameWindow);
 		canvas.addGLEventListener(gameWindow);
-		canvas.addKeyListener(eventHandler);
 		frame.add(canvas);
 		
 		//Scaling setup
@@ -124,6 +127,7 @@ public class Main implements GLEventListener{
 				debuggingCamera.draw(gl, true);
 				break;
 			case 1:
+				povCamera.draw(gl, player.globalPosition, player.xHeading, player.yHeading);
 				break;
 			case 2:
 				break;
@@ -134,10 +138,11 @@ public class Main implements GLEventListener{
 		}
 		
 		//Draw all other non transparent objects
+		this.skyBox.drawSkyBox(player.globalPosition, true);
 		this.terrain.drawHeightMappedTerrain(shader);
-		this.waterLevel.drawWater();
 		this.player.drawPlayer(frame);
-		this.skyBox.drawSkyBox(player.globalPosition);
+		this.waterLevel.drawWater();
+		this.lighting.runOnDisplay(true);
 		this.lighting.drawSpheres();
 		//Draw transparent objects last
 		gl.glDepthMask(false);
@@ -175,14 +180,8 @@ public class Main implements GLEventListener{
 		
 		//use the lights
 		lighting = new Lighting(gl, glut);
-		lighting.useLighting();
+		lighting.initLighting();
 		gl.glShadeModel(GL2.GL_SMOOTH);
-		
-		//Set up cameras
-		debuggingCamera = new TrackballCamera(canvas);
-		debuggingCamera.setDistance(1.5);
-		debuggingCamera.setFieldOfView(70);
-		debuggingCamera.setLookAt(0, 0, 0);
 		
 		//Display lists 
 		displayList = gl.glGenLists(1);
@@ -196,7 +195,20 @@ public class Main implements GLEventListener{
 		skyBox = new SkyBox(gl);
 		
 		//Set character
-		player = new Player(gl, glut, this.terrain);
+		player = new Player(canvas, frameDimension, gl, glut, this.terrain);
+		
+		//Set up cameras
+		debuggingCamera = new TrackballCamera(canvas);
+		debuggingCamera.setDistance(1.5);
+		debuggingCamera.setFieldOfView(70);
+		debuggingCamera.setLookAt(0, 0, 0);
+		//2
+		povCamera = new FirstPersonCamera();
+		povCamera.setFieldOfView(70);
+		povCamera.setLookAt(player.xHeading, player.yHeading, player.globalPosition);
+		
+		//Debug
+		debuggingControls.debugNotify();
 	}
 	
 	//Set up main functions for display
@@ -230,7 +242,11 @@ public class Main implements GLEventListener{
 
 	@Override
 	public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
+		frameDimension[0] = (float)width;
+		frameDimension[1] = (float)height;
+		
 		debuggingCamera.newWindowSize(width, height);
+		povCamera.newWindowSize(width, height);
 	}
 	
 
