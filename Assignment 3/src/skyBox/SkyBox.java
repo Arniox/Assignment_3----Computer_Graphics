@@ -57,7 +57,7 @@ public class SkyBox {
 		//Push and pop for draw
 		gl.glPushMatrix();
 		gl.glTranslated(characterPos[0], 20, characterPos[2]);
-			//Draw all	
+			//Draw all
 			if(night) {
 				this.drawNight();
 			}else { this.drawDay(); }
