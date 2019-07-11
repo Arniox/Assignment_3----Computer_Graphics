@@ -47,6 +47,10 @@ public class TrackballCamera implements MouseListener, MouseMotionListener, Mous
     	canvas.addMouseListener(this);
     	canvas.addMouseWheelListener(this);
     	canvas.addMouseMotionListener(this);
+    	
+    	this.setDistance(1.5);
+    	this.setFieldOfView(70);
+    	this.setLookAt(0, 0, 0);
     }
 
     /**
@@ -85,6 +89,13 @@ public class TrackballCamera implements MouseListener, MouseMotionListener, Mous
             0, 1, 0);                        // up
     }
 
+    //Close
+    public void close() {
+    	this.glu = null;
+    	this.lookAt = null;
+		System.out.println("TrackballCamera closed....");
+    }
+    
     /**
      * Gets the distance of the camera from the lookAt point
      * @return the distance of the camera from the lookAt point

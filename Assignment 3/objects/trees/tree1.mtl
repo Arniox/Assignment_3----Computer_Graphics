@@ -1,0 +1,20 @@
+# Blender MTL File: 'lowpolytree.blend'
+# Material Count: 2
+
+newmtl Leaves
+Ns 96.078431
+Ka 0.043 0.2862 0
+Kd 0.2 0.2 0.2
+Ks 0 0 0
+Ni 1.000000
+d 1.000000
+illum 2
+
+newmtl Bark
+Ns 96.078431
+Ka 0.2078 0.09411 0
+Kd 0.2 0.2 0.2
+Ks 0 0 0
+Ni 1.000000
+d 1.000000
+illum 2

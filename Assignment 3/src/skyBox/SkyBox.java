@@ -19,6 +19,9 @@ public class SkyBox {
 	public static final String[] SKYBOX_TEXTURES = new String[]{"textures/skybox/Day.png",
 																"textures/skybox/CloudsNegated.png",
 																"textures/skybox/Night.png"};
+	//Object mutliplier
+	private static final float OBJECT_MUTLIPLIER = 200;
+	
 	//Material
 	private static final float SKY_DIFFUSE[] = {1,1,1,1};
 	private static final float SKY_SPECULAR[] = {0,0,0,0};
@@ -47,9 +50,9 @@ public class SkyBox {
 		loadTextures();
 		
 		//Load objects
-		skyBoxDay = objLoader.loadModel("objects/SkyBoxD.obj");
-		skyBoxNight = objLoader.loadModel("objects/SkyBoxN.obj");
-		skyBoxCloud = objLoader.loadModel("objects/SkyBoxC.obj");
+		skyBoxDay = objLoader.loadModel("objects/skybox/SkyBoxD.obj", "skybox/");
+		skyBoxNight = objLoader.loadModel("objects/skybox/SkyBoxN.obj", "skybox/");
+		skyBoxCloud = objLoader.loadModel("objects/skybox/SkyBoxC.obj", "skybox/");
 	}
 	
 	//Draw
@@ -73,7 +76,7 @@ public class SkyBox {
 		this.setTextureParameter();
 		this.setMaterials(false);
 
-		skyBoxDay.drawObject(GL2.GL_QUADS, 200);
+		skyBoxDay.drawObject(GL2.GL_QUADS, OBJECT_MUTLIPLIER);
 		
 		//Disabled
 		texture.disable(gl);
@@ -88,7 +91,7 @@ public class SkyBox {
 		this.setTextureParameter();
 		this.setMaterials(true);
 
-		skyBoxNight.drawObject(GL2.GL_QUADS, 200);
+		skyBoxNight.drawObject(GL2.GL_QUADS, OBJECT_MUTLIPLIER);
 		
 		//Disabled
 		texture.disable(gl);
@@ -96,6 +99,7 @@ public class SkyBox {
 	}
 	
 	//Draw Cloud skybox
+	@SuppressWarnings("unused")
 	private void drawClouds() {
 		//Translate to fix texture being upside down
 		gl.glRotated(180, 1, 0, 0);
@@ -104,7 +108,7 @@ public class SkyBox {
 		this.setTextureParameter();
 		this.setMaterials(false);
 
-		skyBoxCloud.drawObject(GL2.GL_QUADS, 200);
+		skyBoxCloud.drawObject(GL2.GL_QUADS, OBJECT_MUTLIPLIER);
 		
 		//Disabled
 		texture.disable(gl);
@@ -160,5 +164,28 @@ public class SkyBox {
 				System.out.println("[DEBUG] - "+SKYBOX_TEXTURES[i]+" FAILED to buffer correctly");
 			}
 		}
+	}
+	
+	//Close
+	public void close() {
+		this.gl = null;
+		this.objLoader.close();
+		this.objLoader = null;
+		this.skyBoxCloud.close();
+		this.skyBoxCloud = null;
+		this.skyBoxDay.close();
+		this.skyBoxDay = null;
+		this.skyBoxNight.close();
+		this.skyBoxNight = null;
+		this.texture = null;
+		this.textureLoader.close();
+		this.textureLoader = null;
+		this.textures = null;
+		System.out.println("SkyBox closed....");
+	}
+	
+	//Getters
+	public float getSkyBoxSize() {
+		return OBJECT_MUTLIPLIER;
 	}
 }

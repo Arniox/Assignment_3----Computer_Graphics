@@ -77,4 +77,10 @@ public class HeightsGenerator {
 		random.setSeed(x * 49632 + z * 325176 + seed);
 		return random.nextFloat() * 2f - 1f;
 	}
+	
+	//Close
+	public void close() {
+		this.random = null;
+		System.out.println("HeightsGenerator closed....");
+	}
 }

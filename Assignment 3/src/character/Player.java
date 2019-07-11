@@ -9,6 +9,8 @@ import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.util.gl2.GLUT;
 
+import lightAndCamera.FirstPersonCamera;
+import lightAndCamera.FlashLight;
 import terrain.NoiseTerrain;
 
 public class Player implements KeyListener, MouseMotionListener{
@@ -20,12 +22,17 @@ public class Player implements KeyListener, MouseMotionListener{
 	private static final float SIZE = 1;
 	private static float[] frameDimension;
 	
+	//Flashlight and camera
+	private FlashLight flashLight;
+	public FirstPersonCamera povCamera;
+	
 	//Location
 	public float globalPosition[];
 	public float speed = 0;
+	private float movementSpeedSet = 0.1f;
 	public float alteration = 0;
 	
-	//Rotatios
+	//Ratios
 	private static final float MAX_PITCH = 90f;
 	private static final float MIN_PITCH = -45f;
 	public float xHeading = 0;
@@ -62,20 +69,32 @@ public class Player implements KeyListener, MouseMotionListener{
 		this.gl = gl;
 		this.glut = glut;
 		
-		//Set starter global position
-		this.globalPosition = new float[]{0,0,0};
 		frameDimension = frameDim;
 		
 		//Set terrain
 		this.terrain = terrain;
+		
+		//Set starter global position
+		float x = (float)Math.random()*(terrain.getSize()/2)-terrain.getSize()/4;
+		float z = (float)Math.random()*(terrain.getSize()/2)-terrain.getSize()/4;
+		this.globalPosition = new float[]{x,terrain.getHeightBellow(x, z),z};
+		
+		//Set up flashlight
+		flashLight = new FlashLight(gl, globalPosition, xHeading, yHeading);
+		flashLight.initFlashLight();
+		
+		//Set up camera
+		povCamera = new FirstPersonCamera();
+		povCamera.setFieldOfView(70);
+		povCamera.setLookAt(xHeading, yHeading, globalPosition);
 	}
 	
 	//Draw
-	public void drawPlayer(int frame) {
+	public void drawPlayer(int frame, boolean flashLightStatus) {
 		if(frame==0) {
 			globalPosition[1] = terrain.getHeightBellow(globalPosition[0], globalPosition[2]);
 		}
-		
+		gl.glShadeModel(GL2.GL_SMOOTH);
 		//Push
 		gl.glPushMatrix();
 			//Translate
@@ -89,27 +108,46 @@ public class Player implements KeyListener, MouseMotionListener{
 			gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, GRASS_DIFFUSE, 0);
 			gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, GRASS_SPECULAR, 0);
 			gl.glMaterialf(GL2.GL_FRONT, GL2.GL_SHININESS, GRASS_SHININESS);
-			
+		
 			//Draw the sphere
 			glut.glutSolidCube(SIZE);
+			
+			//Flashlight
+			gl.glRotated(yHeading/2, 0, 0, 1);
+			flashLight.runOnDisplay(flashLightStatus);
 			
 		//Pop
 		gl.glPopMatrix();
 	}
 	
+	//Sprint
+	public void sprint(boolean sprint) {
+		if(sprint) {
+			movementSpeedSet = 0.3f;
+		}else {
+			movementSpeedSet = 0.1f;
+		}
+	}
+	
+	//Draw camera
+	public void drawPlayerCamera() {
+		//Camera
+		povCamera.draw(gl, globalPosition, xHeading, yHeading);
+	}
+	
 	//Animate
 	public void animate() {
 		if(moveForward) {
-			calculateMovement(0.1f, 0);
+			calculateMovement(movementSpeedSet, 0);
 		}
 		if(moveBackward) {
-			calculateMovement(-0.1f, 0);
+			calculateMovement(-movementSpeedSet, 0);
 		}
 		if(strafeLeft) {
-			calculateMovement(0.1f, -90);
+			calculateMovement(movementSpeedSet, -90);
 		}
 		if(strafeRight) {
-			calculateMovement(0.1f, 90);
+			calculateMovement(movementSpeedSet, 90);
 		}
 		if(rotateRight) {
 			calculateRotation(-3f);
@@ -147,6 +185,17 @@ public class Player implements KeyListener, MouseMotionListener{
 		}else {
 			yHeading += addition;
 		}
+	}
+	
+	//Close
+	public void close() {
+		this.flashLight.close();
+		this.flashLight = null;
+		this.gl = null;
+		this.glut = null;
+		this.povCamera.close();
+		this.povCamera = null;
+		System.out.println("Player closed....");
 	}
 	
 	//Key Events

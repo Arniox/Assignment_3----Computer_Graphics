@@ -26,4 +26,10 @@ public class TextureLoader {
 			return null;
 		}
 	}
+	
+	//Close
+	public void close() {
+		this.texture = null;
+		System.out.println("TextureLoader closed....");
+	}
 }

@@ -15,6 +15,9 @@ public class ObjLoader {
 	//data
 	private String modelName;
 	private int smoothingType;
+	private String materialFile;
+	private ArrayList<String> materials;
+	private ArrayList<Integer> materialPosition;
 	//Array list data
 	private ArrayList<float[]> vData = new ArrayList<float[]>();
 	private ArrayList<float[]> vtData = new ArrayList<float[]>();
@@ -27,13 +30,15 @@ public class ObjLoader {
 	}
 	
 	//Load object
-	public RawModel loadModel(String fileName) {
+	public RawModel loadModel(String fileName, String subFileExtension) {
 		System.out.println("\n[DEBUG] - Buffering Object: "+fileName+"...");
 		//Clean up
 		vData = new ArrayList<float[]>();
 		vtData = new ArrayList<float[]>();
 		vnData = new ArrayList<float[]>();
 		faceData = new ArrayList<int[][]>();
+		materials = new ArrayList<String>();
+		materialPosition = new ArrayList<Integer>();
 		
 		
 		//Buffer and store object data
@@ -41,6 +46,7 @@ public class ObjLoader {
 			BufferedReader br = new BufferedReader(new FileReader(fileName));
 			String line = null;
 			int linesScanned = 0;
+			int matPos = 0;
 			
 			while((line = br.readLine()) != null) {
 				if(line.startsWith("#")) {
@@ -49,6 +55,8 @@ public class ObjLoader {
 						linesScanned++;					
 					}
 				}else if(line.startsWith(" ")) {//Ignore whitespace
+				}else if(line.startsWith("mtllib ")) {	//Read material file name
+					materialFile = processMaterial(line);
 				}else if(line.startsWith("o ")) { //Read model name
 					modelName = line.substring(2);
 					linesScanned++;
@@ -67,9 +75,13 @@ public class ObjLoader {
 					}else {
 						smoothingType = 0;
 					}
+				}else if(line.startsWith("usemtl ")){ //Read the material
+					materials.add(processMaterial(line));
+					materialPosition.add(matPos);
 				}else if(line.startsWith("f ")) { //Read face data
 					faceData.add(processFData(line));
 					linesScanned++;
+					matPos++;
 				}
 			}
 			
@@ -77,13 +89,19 @@ public class ObjLoader {
 			
 			br.close();
 			
-			return new RawModel(gl, smoothingType, vData, vtData, vnData, faceData);
+			return new RawModel(gl, smoothingType, subFileExtension, materialFile, materials, materialPosition, vData, vtData, vnData, faceData);
 			
  		}catch(IOException e) {
 			System.out.println("[DEBUG] - FAILED to buffer: "+fileName);
 			
 			return null;
 		}
+	}
+	
+	//Process material
+	private String processMaterial(String line) {
+		String s[] = line.split(" ");
+		return s[1];
 	}
 	
 	//Process data into string array and return float parsed data
@@ -104,45 +122,44 @@ public class ObjLoader {
 	
 	//Process face data into string array and return float parsed data
 	private int[][] processFData(String read) {
+		//Two string arrays: s is array for each element including the 'f'. j is for each element without 'f'
 		final String s[] = read.split("\\s+");
 		final String j[] = new String[s.length-1];
 		
+		//Float double array with z length of a faces vertexes. A cube would have 4 vertexes
+		//x length is the string length - the number of dashes 1/1/1. Total length is 5-(int)5/2
 		final int k[][] = new int[j.length][(s[1].length())-(s[1].length()/2)];
 		//Remove "f"
 		for(int i=0; i<j.length; i++) {
 			if(s[i] != "f") {
 				j[i] = s[i+1];
-			}
-			//Remove "/"
-			int zCount = 0;
-			for(int z=0; z<j[i].length(); z++) {
-				String g = "";
-				//Find any number and concatenate into g
-				int forwards = 0;
-				while(getChar(j[i], z+forwards) != '/') {
-					g += getChar(j[i], z+forwards)+"";
-					
-					//Add 1 to zCount to iterate k
-					if(forwards==0) {
-						zCount++;
+				
+				String numString[] = j[i].split("/");
+				int[] nums = new int[numString.length];
+				for(int pop = 0; pop<numString.length; pop++) {
+					if(numString[pop].isEmpty()) {
+						numString[pop] = "0";
 					}
-					forwards++;
+					nums[pop] = Integer.parseInt(numString[pop]);
 				}
 				
-				z+=forwards;
-				k[i][zCount-1] = Integer.parseInt(g);
+				k[i] = nums;
 			}
+			
 		}
 		
 		return k;
 	}
 	
-	//Get char. if exception, return char '/' to break the loop (this is for end of face vertex)
-	private char getChar(String o, int pos) {
-		try {
-			return o.charAt(pos);
-		}catch(Exception e) {
-			return '/';
-		}
+	//Close
+	public void close() {
+		this.faceData = null;
+		this.gl = null;
+		this.materialPosition = null;
+		this.materials = null;
+		this.vData = null;
+		this.vtData = null;
+		this.vnData = null;
+		System.out.println("ObjLoader closed....");
 	}
 }

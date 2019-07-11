@@ -27,6 +27,7 @@ public class CoordinateAxes {
 	 */
 	public void debug(float lengthAxis, int displayList) {
 		gl.glNewList(displayList, GL2.GL_COMPILE);
+		gl.glShadeModel(GL2.GL_SMOOTH);
 		
 		this.drawAxisLines(lengthAxis);
 		this.drawCenterSphere();
@@ -124,5 +125,12 @@ public class CoordinateAxes {
 		gl.glRasterPos3f(0,0,-0.5f);
 		glut.glutBitmapString(GLUT.BITMAP_HELVETICA_18, "-Z");
 		gl.glEnd();
+	}
+	
+	//Close
+	public void close() {
+		this.gl = null;
+		this.glut = null;
+		System.out.println("CoordinateAxes closed....");
 	}
 }

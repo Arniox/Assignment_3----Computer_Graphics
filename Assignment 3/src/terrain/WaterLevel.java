@@ -19,8 +19,8 @@ public class WaterLevel {
 	private Texture texture;
 	
 	//Material
-	private static final float WATER_DIFFUSE[] = {1,1,1,0.65f};
-	private static final float WATER_SPECULAR[] = {0,0,0,0.65f};
+	private static final float WATER_DIFFUSE[] = {0.9f,0.9f,1,0.65f};
+	private static final float WATER_SPECULAR[] = {0,0,1,0.65f};
 	private static final float WATER_AMBIENT[] = {0,0,1,0.65f};
 	private static final float WATER_SHININESS = 80;
 	
@@ -39,6 +39,10 @@ public class WaterLevel {
 	
 	//Draw
 	public void drawWater() {
+		//Disable culling face so that the underside of water still displays
+		gl.glDisable(GL.GL_CULL_FACE);
+		gl.glShadeModel(GL2.GL_SMOOTH);
+		
 		//Push and pop
 		gl.glPushMatrix();
 		
@@ -75,6 +79,9 @@ public class WaterLevel {
 		
 		//Pop
 		gl.glPopMatrix();
+		
+		//Re-enable culling
+		gl.glEnable(GL.GL_CULL_FACE);
 	}
 	
 	//Load textures
@@ -98,6 +105,20 @@ public class WaterLevel {
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_REPEAT);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR );
+	}
+	
+	//Close
+	public void close() {
+		this.gl = null;
+		this.texture = null;
+		this.textureLoader.close();
+		this.textureLoader = null;
+		System.out.println("WaterLevel closed....");
+	}
+	
+	//Get water height
+	public int getWaterheight() {
+		return this.waterHeight;
 	}
 	
 }

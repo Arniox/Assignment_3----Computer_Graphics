@@ -5,6 +5,7 @@ import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Random;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
@@ -17,8 +18,9 @@ import com.jogamp.opengl.util.FPSAnimator;
 import com.jogamp.opengl.util.gl2.GLUT;
 
 import character.Player;
+import fog.Fog;
+import forest.Forest;
 import lightAndCamera.CoordinateAxes;
-import lightAndCamera.FirstPersonCamera;
 import lightAndCamera.Lighting;
 import lightAndCamera.TrackballCamera;
 import shaders.StaticShader;
@@ -38,35 +40,43 @@ public class Main implements GLEventListener{
 	public int displayList;
 	
 	//Terrain
-	public NoiseTerrain terrain;
-	public WaterLevel waterLevel;
+	public static NoiseTerrain terrain;
+	public static WaterLevel waterLevel;
 	//Sky box
-	public SkyBox skyBox;
+	public static SkyBox skyBox;
+	//Trees
+	public static Forest forest;
 	
 	//Character
-	public Player player;
+	public static Player player;
 	
 	//Lighting
-	public Lighting lighting;
+	public static Lighting lighting;
+	public boolean flashLightStatus = false;
+	
+	//Fog
+	public Fog fog;
+	public boolean nightOrDay;
 	
 	//Current camera mode
 	public int cameraInUse = 1;
 	//Debugging
-	public boolean debugging = true;
+	public boolean debugging = false;
 	public boolean wireFrame = false;
 	
 	//Timing
 	private int frame = 0;
+	//Randomizer
+	private Random rand;
 	
 	//Animate
 	public boolean animate = true;
 	public float frameDimension[] = new float[2];
 	
 	//Cameras
-	public TrackballCamera debuggingCamera;
-	public FirstPersonCamera povCamera;
+	public static TrackballCamera debuggingCamera;
 	//Coordinate axis for debugging
-	public CoordinateAxes coordinateAxis;
+	public static CoordinateAxes coordinateAxis;
 	
 	public static void main(String[] args){
 		//Build GUIView which contains everything
@@ -103,6 +113,13 @@ public class Main implements GLEventListener{
 						System.exit(0);
 						
 						shader.cleanUp();
+						terrain.close();
+						waterLevel.close();
+						skyBox.close();
+						player.close();
+						lighting.close();
+						debuggingCamera.close();
+						coordinateAxis.close();
 					}
 				}).start();
 			}
@@ -127,7 +144,7 @@ public class Main implements GLEventListener{
 				debuggingCamera.draw(gl, true);
 				break;
 			case 1:
-				povCamera.draw(gl, player.globalPosition, player.xHeading, player.yHeading);
+				player.drawPlayerCamera();
 				break;
 			case 2:
 				break;
@@ -137,16 +154,22 @@ public class Main implements GLEventListener{
 			coordinateAxis.debug(100, displayList);
 		}
 		
-		//Draw all other non transparent objects
-		this.skyBox.drawSkyBox(player.globalPosition, true);
-		this.terrain.drawHeightMappedTerrain(shader);
-		this.player.drawPlayer(frame);
-		this.waterLevel.drawWater();
-		this.lighting.runOnDisplay(true);
-		this.lighting.drawSpheres();
+		//Draw all other non transparent objects in order
+		// - Skybox first ontop
+		// - Terrain second ontop of water, underneath skybox
+		// - Player under terrain but above water
+		// - Lightning over everything except fog
+		skyBox.drawSkyBox(player.globalPosition, nightOrDay);
+		terrain.drawHeightMappedTerrain(shader, player.globalPosition, skyBox.getSkyBoxSize());
+		player.drawPlayer(frame, flashLightStatus);
+		forest.drawForest(displayList+1, player.globalPosition, skyBox.getSkyBoxSize());
+		lighting.runOnDisplay(nightOrDay, debugging);
+		//Draw fog
+		this.fog.drawFog((player.povCamera.getCameraPosition()[1]<=waterLevel.getWaterheight() ? true : false));
 		//Draw transparent objects last
 		gl.glDepthMask(false);
 			//Draw
+			waterLevel.drawWater();
 		gl.glDepthMask(true);
 		
 		//Animate
@@ -156,12 +179,14 @@ public class Main implements GLEventListener{
 		
 		//Call all display lists
 		gl.glCallList(displayList);
+		gl.glCallList(displayList+1);
 
 		gl.glDisable(GL2.GL_BLEND);
 		gl.glFlush();
 		
 		//Delete display lists
 		gl.glDeleteLists(displayList, 1);
+		gl.glDeleteLists(displayList+1, 1);
 		
 		shader.stop();
 		
@@ -172,6 +197,12 @@ public class Main implements GLEventListener{
 	@Override
 	public void init(GLAutoDrawable drawable) {	
 		System.out.println("Loading...");
+		//Set up random
+		rand = new Random();
+		nightOrDay = rand.nextBoolean();
+		//Set up default flashlight status (night time it will be on by default. Day will be off by default)
+		flashLightStatus = (nightOrDay? true : false);
+		
 		//Set up mains
 		gl = drawable.getGL().getGL2();
 		glut = new GLUT();
@@ -180,11 +211,9 @@ public class Main implements GLEventListener{
 		
 		//use the lights
 		lighting = new Lighting(gl, glut);
-		lighting.initLighting();
-		gl.glShadeModel(GL2.GL_SMOOTH);
 		
 		//Display lists 
-		displayList = gl.glGenLists(1);
+		displayList = gl.glGenLists(2);
 		
 		//Create Axis
 		coordinateAxis = new CoordinateAxes(gl, glut);
@@ -193,19 +222,16 @@ public class Main implements GLEventListener{
 		terrain = new NoiseTerrain(gl);
 		waterLevel = new WaterLevel(gl, terrain.getSize(), -10);
 		skyBox = new SkyBox(gl);
+		forest = new Forest(gl,terrain);
 		
 		//Set character
-		player = new Player(canvas, frameDimension, gl, glut, this.terrain);
+		player = new Player(canvas, frameDimension, gl, glut, terrain);
+		
+		//Set fog
+		fog = new Fog(gl);
 		
 		//Set up cameras
 		debuggingCamera = new TrackballCamera(canvas);
-		debuggingCamera.setDistance(1.5);
-		debuggingCamera.setFieldOfView(70);
-		debuggingCamera.setLookAt(0, 0, 0);
-		//2
-		povCamera = new FirstPersonCamera();
-		povCamera.setFieldOfView(70);
-		povCamera.setLookAt(player.xHeading, player.yHeading, player.globalPosition);
 		
 		//Debug
 		debuggingControls.debugNotify();
@@ -246,7 +272,7 @@ public class Main implements GLEventListener{
 		frameDimension[1] = (float)height;
 		
 		debuggingCamera.newWindowSize(width, height);
-		povCamera.newWindowSize(width, height);
+		player.povCamera.newWindowSize(width, height);
 	}
 	
 

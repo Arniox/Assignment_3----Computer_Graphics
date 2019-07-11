@@ -92,7 +92,6 @@ public abstract class ShaderProgram {
 		return shaderID;
 	}
 	
-	
 	//Get program ID
 	public int getProgramID() {
 		return this.programID;

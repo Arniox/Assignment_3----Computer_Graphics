@@ -3,12 +3,7 @@ package lightAndCamera;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.glu.GLU;
 
-public class FirstPersonCamera{
-	
-	//Camera hard limits
-	private static final double MIN_FOV = 1;
-	private static final double MAX_FOV = 90;
-	
+public class FirstPersonCamera{	
 	//look at
 	private double lookAt[] = {0,0,0};
 	
@@ -17,12 +12,15 @@ public class FirstPersonCamera{
 	private double windowWidth = 1;
 	private double windowHeight = 1;
 	
+	//Camera Position
+	private float[] cameraPos;
+	
 	//Glu
 	private GLU glu = new GLU();
 	
 	//Constructor
 	public FirstPersonCamera() {
-		
+		cameraPos = new float[3];
 	}
 	
 	//Draw
@@ -33,11 +31,16 @@ public class FirstPersonCamera{
 		glu.gluPerspective(fieldOfView, windowWidth/windowHeight, 0.1, 500);
 		this.setLookAt(-heading, pitch, position);
 		
+		//Set camera pos
+		cameraPos[0] = position[0];
+		cameraPos[1] = position[1]+1;
+		cameraPos[2] = position[2];
+		
 		//Set up camera position and orientation
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glLoadIdentity();
 		glu.gluLookAt(
-				position[0], position[1]+1, position[2], 	//eye
+				cameraPos[0], cameraPos[1], cameraPos[2], 	//eye
 				lookAt[0], lookAt[1], lookAt[2],			//center
 				0, 1, 0);									//up
 	}
@@ -60,6 +63,19 @@ public class FirstPersonCamera{
 	public void newWindowSize(int width, int height) {
 		windowWidth = Math.max(1.0, width);
 		windowHeight = Math.max(1.0, height);
+	}
+	
+	//Close
+	public void close() {
+		this.cameraPos = null;
+		this.glu = null;
+		this.lookAt = null;
+		System.out.println("FirstPersonCamera closed....");
+	}
+	
+	//Get camera pos
+	public float[] getCameraPosition() {
+		return this.cameraPos;
 	}
 
 }
